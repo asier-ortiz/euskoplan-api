@@ -116,7 +116,7 @@ docker-compose exec php php artisan db:seed
 
 - [phpMyAdmin](http://localhost:8081) (credenciales ~> db / user / password)
 - [API] Descargar el siguiente archivo e importarlo a Postman para probar los endpoints
-    - https://drive.google.com/file/d/17CYtfVEfBTAMRs62aRSxfgVsbvIgl-kN/view?usp=sharing
+    - https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing
 
 ## 7. Acceso shell al contenedor de la aplicación
 
