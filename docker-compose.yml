@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+
+    apache:
+        container_name: api-apache
+        restart: unless-stopped
+        build:
+            context: ./
+            dockerfile: docker-compose/apache/test.apache.Dockerfile
+        ports:
+            - "8000:8000"
+        volumes:
+            - ./:/var/www
+        networks:
+            - api
+
+    php:
+        container_name: api-app
+        restart: unless-stopped
+        build:
+            context: ./
+            dockerfile: docker-compose/php/test.php.Dockerfile
+        ports:
+            - "9000:9000"
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        environment:
+            # Configuración PHPStorm Xdebug
+            # https://lessthan12ms.com/docker-php-xdebug-phpstorm-good-developer-experience.html
+            PHP_IDE_CONFIG: "serverName=api.proyecto-daw.test"
+        networks:
+            - api
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+
+    db:
+        image: mysql:8.0.30
+        container_name: api-db
+        # Solo para macs con procesadores ARM
+        # platform: linux/amd64
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        ports:
+            - "3306:3306"
+        networks:
+            - api
+
+    pma:
+        image: phpmyadmin/phpmyadmin:5.2.0
+        container_name: api-pma
+        env_file:
+            - .env
+        environment:
+            PMA_HOST: ${DB_USERNAME}
+            PMA_PORT: ${DB_PORT}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            PMA_ARBITRARY: 1
+        depends_on:
+            - db
+        ports:
+            - "8081:80"
+        networks:
+            - api
+
+networks:
+    api:
+        driver: bridge
