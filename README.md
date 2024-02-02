@@ -145,3 +145,8 @@ docker-compose stop
 ```bash
 docker-compose exec php php artisan collections:cron
 ```
+
+## Screenshots
+
+<img src="screenshots/screenshot-1.jpg" width="300">
+
