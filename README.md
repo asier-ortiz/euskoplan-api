@@ -1,7 +1,9 @@
 # Euskoplan API
 
 Backend en formato API Rest creado en Laravel para el proyecto Euskoplan.  
+
 Permite la creación y gestión de planes turísticos utilizando como fuente de datos diferentes catálogos de la web [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) en formato XML. Esta información se va actualizando en la base de datos del proyecto mediante un parser y una tarea Cron.  
+
 Utiliza la API de Mapbox para calcular la ruta del itinerario y gestióna la autorización y autenticación mediante [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum) y [Laravel Gates](https://laravel.com/docs/10.x/authorization#gates).  
 
 # Instrucciones 
@@ -78,7 +80,7 @@ docker-compose up -d
 
 ## 3. Directorio de dependencias vendor y generación de clave cifrado
 
-> :warning: Este paso solo es necesario la primera vez o cuando instalemos bibliotecas.
+> :warning: Este paso solo es necesario la primera vez.
 
 - Desde el directorio raíz del proyecto ejecutar el siguiente commando y esperar a que termine la instalación:
 
@@ -117,8 +119,6 @@ docker-compose exec php php artisan db:seed
     - https://drive.google.com/file/d/17CYtfVEfBTAMRs62aRSxfgVsbvIgl-kN/view?usp=sharing
 
 ## 7. Acceso shell al contenedor de la aplicación
-
-> :information_source: Desde aquí lanzaremos los comandos php artisan para crear los controladores, modelos etc...
 
 ```shell
 docker-compose exec php /bin/bash
