@@ -14,6 +14,6 @@ RUN a2enmod rewrite
 
 COPY /docker-compose/apache/apache2.conf /etc/apache2/
 
-COPY /docker-compose/apache/api.proyecto-daw.conf /etc/apache2/sites-enabled/
+COPY /docker-compose/apache/api.euskoplan.conf /etc/apache2/sites-enabled/
 
 CMD ["apachectl", "-D", "FOREGROUND"]

@@ -39,7 +39,7 @@ services:
         image: mysql:8.0.30
         container_name: api-db
         # Solo para macs con procesadores ARM
-        # platform: linux/amd64
+        platform: linux/amd64
         restart: unless-stopped
         environment:
             MYSQL_DATABASE: ${DB_DATABASE}
@@ -54,8 +54,10 @@ services:
             - api
 
     pma:
-        image: phpmyadmin/phpmyadmin:5.2.0
+        image: phpmyadmin/phpmyadmin
         container_name: api-pma
+        # Solo para macs con procesadores ARM
+        platform: linux/amd64
         env_file:
             - .env
         environment:
