@@ -51,16 +51,16 @@ DB_USERNAME=user
 DB_PASSWORD=password
 ```
 
-- Modifica los datos para el servidor de e-mail en el fichero `.env` con los datos de tu proveedor
+- Modifica los datos para el servidor de e-mail en el fichero `.env`
 
 ```text
-MAIL_MAILER=
-MAIL_HOST=
-MAIL_PORT=
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_ENCRYPTION=
-MAIL_FROM_ADDRESS=
+MAIL_MAILER=smtp
+MAIL_HOST=mailhog
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS=euskoplan@test.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
@@ -114,9 +114,10 @@ docker-compose exec php php artisan db:seed
 
 ## 6. Accede a los servicios
 
-- [phpMyAdmin](http://localhost:8081) (credenciales ~> db / user / password)
-- [API] Descargar el siguiente archivo e importarlo a Postman para probar los endpoints
-    - https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing
+- [phpMyAdmin](http://localhost:8081) (credenciales --> db / user / password)
+- [Mailhog](http://localhost:8025/)
+- [Postman](https://www.postman.com/): Descargar el siguiente [archivo](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) e importarlo para probar los endpoints
+    
 
 ## 7. Acceso shell al contenedor de la aplicación
 

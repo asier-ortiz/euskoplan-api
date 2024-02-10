@@ -56,8 +56,8 @@ services:
     pma:
         image: phpmyadmin/phpmyadmin
         container_name: api-pma
-        # Solo para macs con procesadores ARM
         platform: linux/amd64
+        restart: unless-stopped
         env_file:
             - .env
         environment:
@@ -69,6 +69,17 @@ services:
             - db
         ports:
             - "8081:80"
+        networks:
+            - api
+
+    mailhog:
+        image: mailhog/mailhog
+        container_name: api-mailhog
+        platform: linux/amd64
+        restart: unless-stopped
+        ports:
+            - '${FORWARD_MAILHOG_PORT:-1025}:1025' # SMTP port
+            - '${FORWARD_MAILHOG_DASHBOARD_PORT:-8025}:8025' # HTTP port (Web UI)
         networks:
             - api
 
