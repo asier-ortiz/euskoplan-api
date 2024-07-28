@@ -39,6 +39,77 @@ Route::group(['prefix' => 'account'], function () {
     Route::post('verify', [EmailVerifyController::class, 'verify']);
 });
 
+// Alojamientos
+Route::group(['prefix' => 'accommodation'], function () {
+    Route::get('/result/{code}/{language}', [AccommodationController::class, 'show']);
+    Route::get('/results/filter', [AccommodationController::class, 'filter']);
+    Route::get('/results/search', [AccommodationController::class, 'search']);
+    Route::get('/categories/{language}', [AccommodationController::class, 'categories']);
+});
+
+// Cuevas y restos arqueológicos
+Route::group(['prefix' => 'cave'], function () {
+    Route::get('/result/{code}/{language}', [CaveController::class, 'show']);
+    Route::get('/results/filter', [CaveController::class, 'filter']);
+    Route::get('/results/search', [CaveController::class, 'search']);
+    Route::get('/categories/{language}', [CaveController::class, 'categories']);
+});
+
+// Recursos culturales
+Route::group(['prefix' => 'cultural'], function () {
+    Route::get('/result/{code}/{language}', [CulturalController::class, 'show']);
+    Route::get('/results/filter', [CulturalController::class, 'filter']);
+    Route::get('/results/search', [CulturalController::class, 'search']);
+    Route::get('/categories/{language}', [CulturalController::class, 'categories']);
+});
+
+// Eventos
+Route::group(['prefix' => 'event'], function () {
+    Route::get('/result/{code}/{language}', [EventController::class, 'show']);
+    Route::get('/results/filter', [EventController::class, 'filter']);
+    Route::get('/results/search', [EventController::class, 'search']);
+    Route::get('/categories/{language}', [EventController::class, 'categories']);
+});
+
+// Parques temáticos
+Route::group(['prefix' => 'fair'], function () {
+    Route::get('/result/{code}/{language}', [FairController::class, 'show']);
+    Route::get('/results/filter', [FairController::class, 'filter']);
+    Route::get('/results/search', [FairController::class, 'search']);
+});
+
+// Localidades
+Route::group(['prefix' => 'locality'], function () {
+    Route::get('/result/{code}/{language}', [LocalityController::class, 'show']);
+    Route::get('/results/filter', [LocalityController::class, 'filter']);
+    Route::get('/results/search', [LocalityController::class, 'search']);
+    Route::get('/names', [LocalityController::class, 'names']);
+});
+
+// Museos y centros de interpretación
+Route::group(['prefix' => 'museum'], function () {
+    Route::get('/result/{code}/{language}', [MuseumController::class, 'show']);
+    Route::get('/results/filter', [MuseumController::class, 'filter']);
+    Route::get('/results/search', [MuseumController::class, 'search']);
+    Route::get('/categories/{language}', [MuseumController::class, 'categories']);
+});
+
+// Espacios naturales
+Route::group(['prefix' => 'natural'], function () {
+    Route::get('/result/{code}/{language}', [NaturalController::class, 'show']);
+    Route::get('/results/filter', [NaturalController::class, 'filter']);
+    Route::get('/results/search', [NaturalController::class, 'search']);
+    Route::get('/categories/{language}', [NaturalController::class, 'categories']);
+});
+
+// Restaurantes
+Route::group(['prefix' => 'restaurant'], function () {
+    Route::get('/result/{code}/{language}', [RestaurantController::class, 'show']);
+    Route::get('/results/filter', [RestaurantController::class, 'filter']);
+    Route::get('/results/search', [RestaurantController::class, 'search']);
+    Route::get('/categories/{language}', [RestaurantController::class, 'categories']);
+});
+
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -48,77 +119,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('user', [AuthController::class, 'user']);
         Route::put('password', [AuthController::class, 'updatePassword']);
         Route::delete('destroy', [AuthController::class, 'destroy']);
-    });
-
-    // Alojamientos
-    Route::group(['prefix' => 'accommodation'], function () {
-        Route::get('/result/{code}/{language}', [AccommodationController::class, 'show']);
-        Route::get('/results/filter', [AccommodationController::class, 'filter']);
-        Route::get('/results/search', [AccommodationController::class, 'search']);
-        Route::get('/categories/{language}', [AccommodationController::class, 'categories']);
-    });
-
-    // Cuevas y restos arqueológicos
-    Route::group(['prefix' => 'cave'], function () {
-        Route::get('/result/{code}/{language}', [CaveController::class, 'show']);
-        Route::get('/results/filter', [CaveController::class, 'filter']);
-        Route::get('/results/search', [CaveController::class, 'search']);
-        Route::get('/categories/{language}', [CaveController::class, 'categories']);
-    });
-
-    // Recursos culturales
-    Route::group(['prefix' => 'cultural'], function () {
-        Route::get('/result/{code}/{language}', [CulturalController::class, 'show']);
-        Route::get('/results/filter', [CulturalController::class, 'filter']);
-        Route::get('/results/search', [CulturalController::class, 'search']);
-        Route::get('/categories/{language}', [CulturalController::class, 'categories']);
-    });
-
-    // Eventos
-    Route::group(['prefix' => 'event'], function () {
-        Route::get('/result/{code}/{language}', [EventController::class, 'show']);
-        Route::get('/results/filter', [EventController::class, 'filter']);
-        Route::get('/results/search', [EventController::class, 'search']);
-        Route::get('/categories/{language}', [EventController::class, 'categories']);
-    });
-
-    // Parques temáticos
-    Route::group(['prefix' => 'fair'], function () {
-        Route::get('/result/{code}/{language}', [FairController::class, 'show']);
-        Route::get('/results/filter', [FairController::class, 'filter']);
-        Route::get('/results/search', [FairController::class, 'search']);
-    });
-
-    // Localidades
-    Route::group(['prefix' => 'locality'], function () {
-        Route::get('/result/{code}/{language}', [LocalityController::class, 'show']);
-        Route::get('/results/filter', [LocalityController::class, 'filter']);
-        Route::get('/results/search', [LocalityController::class, 'search']);
-        Route::get('/names', [LocalityController::class, 'names']);
-    });
-
-    // Museos y centros de interpretación
-    Route::group(['prefix' => 'museum'], function () {
-        Route::get('/result/{code}/{language}', [MuseumController::class, 'show']);
-        Route::get('/results/filter', [MuseumController::class, 'filter']);
-        Route::get('/results/search', [MuseumController::class, 'search']);
-        Route::get('/categories/{language}', [MuseumController::class, 'categories']);
-    });
-
-    // Espacios naturales
-    Route::group(['prefix' => 'natural'], function () {
-        Route::get('/result/{code}/{language}', [NaturalController::class, 'show']);
-        Route::get('/results/filter', [NaturalController::class, 'filter']);
-        Route::get('/results/search', [NaturalController::class, 'search']);
-        Route::get('/categories/{language}', [NaturalController::class, 'categories']);
-    });
-
-    // Restaurantes
-    Route::group(['prefix' => 'restaurant'], function () {
-        Route::get('/result/{code}/{language}', [RestaurantController::class, 'show']);
-        Route::get('/results/filter', [RestaurantController::class, 'filter']);
-        Route::get('/results/search', [RestaurantController::class, 'search']);
-        Route::get('/categories/{language}', [RestaurantController::class, 'categories']);
     });
 
     // Planes
