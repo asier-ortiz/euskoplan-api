@@ -149,21 +149,12 @@ class DataManager
                 file_put_contents(database_path() . '/data/' . $language . '-' . $resourceType . '.json', $json_data);
             }
         } catch (Exception $e) {
-            // Verificar el mensaje de la excepción y personalizar el mensaje de error
-            switch ($e->getMessage()) {
-                case 'Requested resource type is invalid.':
-                    echo "Error: The resource type '$resourceType' is invalid." . PHP_EOL;
-                    break;
-                case 'Requested resource language is invalid.':
-                    echo "Error: The resource language '$language' is invalid." . PHP_EOL;
-                    break;
-                case 'Could not decode requested resource.':
-                    echo "Error: Unable to decode the resource at '$url'." . PHP_EOL;
-                    break;
-                default:
-                    echo "Error: An unexpected error occurred - " . $e->getMessage() . PHP_EOL;
-                    break;
-            }
+            echo match ($e->getMessage()) {
+                'Requested resource type is invalid.' => "Error: The resource type '$resourceType' is invalid." . PHP_EOL,
+                'Requested resource language is invalid.' => "Error: The resource language '$language' is invalid." . PHP_EOL,
+                'Could not decode requested resource.' => "Error: Unable to decode the resource at '$url'." . PHP_EOL,
+                default => "Error: An unexpected error occurred - " . $e->getMessage() . PHP_EOL,
+            };
         }
     }
 }
