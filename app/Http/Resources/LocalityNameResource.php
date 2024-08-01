@@ -10,7 +10,8 @@ class LocalityNameResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'nombre' => $this->nombre
+            'nombre' => $this->nombre,
+            'nombre_provincia' => $this->nombreProvincia
         ];
     }
 }
