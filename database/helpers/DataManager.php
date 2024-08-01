@@ -113,33 +113,56 @@ class DataManager
 
     public function fetchResource($resourceType, $language): void
     {
-        if (!array_key_exists($resourceType, self::RESOURCES)) die('Requested resource type is invalid.');
-        if (!in_array($language, self::LANGUAGES)) die('Requested resource language is invalid.');
-
-        $url = self::RESOURCES[$resourceType];
         try {
+            if (!array_key_exists($resourceType, self::RESOURCES)) {
+                throw new Exception('Requested resource type is invalid.');
+            }
+            if (!in_array($language, self::LANGUAGES)) {
+                throw new Exception('Requested resource language is invalid.');
+            }
+
+            $url = self::RESOURCES[$resourceType];
             $json = file_get_contents($url);
             $decodedJson = json_decode($json);
-        } catch (Exception $e) {
-            die('Getaddrinfo for www.opendata.euskadi.eus failed' . PHP_EOL . $e);
-        }
 
-        if (!$decodedJson) die('Could not decode requested resource.');
-        if (!file_exists(database_path() . '/data')) mkdir(database_path() . '/data', 0775, true);
-
-        foreach ($decodedJson as $jsonObject) {
-            $zipFileUrl = $jsonObject->zipFile ?? null;
-            if ($zipFileUrl !== null) {
-                $dataResource = self::getXML($zipFileUrl, $language);
-                if ($dataResource !== null) $data[] = $dataResource;
+            if (!$decodedJson) {
+                throw new Exception('Could not decode requested resource.');
             }
-        }
-        if (!empty($data)) {
-            try {
+
+            if (!file_exists(database_path() . '/data')) {
+                mkdir(database_path() . '/data', 0775, true);
+            }
+
+            $data = [];
+            foreach ($decodedJson as $jsonObject) {
+                $zipFileUrl = $jsonObject->zipFile ?? null;
+                if ($zipFileUrl !== null) {
+                    $dataResource = $this->getXML($zipFileUrl, $language);
+                    if ($dataResource !== null) {
+                        $data[] = $dataResource;
+                    }
+                }
+            }
+
+            if (!empty($data)) {
                 $json_data = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 file_put_contents(database_path() . '/data/' . $language . '-' . $resourceType . '.json', $json_data);
-            } catch (Exception $e) {
-                die('Could not save requested resource.' . PHP_EOL . $e);
+            }
+        } catch (Exception $e) {
+            // Verificar el mensaje de la excepción y personalizar el mensaje de error
+            switch ($e->getMessage()) {
+                case 'Requested resource type is invalid.':
+                    echo "Error: The resource type '$resourceType' is invalid." . PHP_EOL;
+                    break;
+                case 'Requested resource language is invalid.':
+                    echo "Error: The resource language '$language' is invalid." . PHP_EOL;
+                    break;
+                case 'Could not decode requested resource.':
+                    echo "Error: Unable to decode the resource at '$url'." . PHP_EOL;
+                    break;
+                default:
+                    echo "Error: An unexpected error occurred - " . $e->getMessage() . PHP_EOL;
+                    break;
             }
         }
     }
