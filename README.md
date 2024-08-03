@@ -75,7 +75,7 @@ MAP_BOX_TOKEN="<YOUR_KEY>"
 - Desde el directorio raíz del proyecto ejecutar el siguiente comando y esperar a que termine:
 
 ```shell
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 3. Directorio de dependencias vendor y generación de clave cifrado
@@ -85,7 +85,7 @@ docker-compose up -d
 - Desde el directorio raíz del proyecto ejecutar el siguiente commando y esperar a que termine la instalación:
 
 ```shell
-docker-compose exec php composer install
+docker compose exec php composer install
 ```  
 
 > :warning: Este paso solo es necesario la primera vez.
@@ -93,7 +93,7 @@ docker-compose exec php composer install
 - Desde el directorio raíz del proyecto ejecutar el siguiente commando:
 
 ```shell
-docker-compose exec php php artisan key:generate
+docker compose exec php php artisan key:generate
 ```  
 
 ## 4. Migraciones
@@ -101,7 +101,7 @@ docker-compose exec php php artisan key:generate
 - Para generar las tablas, desde el directorio raíz del proyecto ejecutar:
 
 ```bash
-docker-compose exec php php artisan migrate
+docker compose exec php php artisan migrate
 ```
 
 ## 5. Seeders
@@ -109,7 +109,7 @@ docker-compose exec php php artisan migrate
 - Para cargar los datos a la BBDD, desde el directorio raíz del proyecto ejecutar:
 
 ```bash
-docker-compose exec php php artisan db:seed
+docker compose exec php php artisan db:seed
 ```
 
 ## 6. Accede a los servicios
@@ -122,13 +122,13 @@ docker-compose exec php php artisan db:seed
 ## 7. Acceso shell al contenedor de la aplicación
 
 ```shell
-docker-compose exec php /bin/bash
+docker compose exec php /bin/bash
 ```  
 
 ## 8. Detén los contenedores
 
 ```shell
-docker-compose stop
+docker compose stop
 ``` 
 
 ## Otros
@@ -144,7 +144,7 @@ docker-compose stop
 > :warning: Puede tardar horas en completarse.
 
 ```bash
-docker-compose exec php php artisan collections:cron
+docker compose exec php php artisan collections:cron
 ```
 
 ## Screenshots
