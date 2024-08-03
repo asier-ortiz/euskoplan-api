@@ -1,7 +1,5 @@
-version: "3.9"
-
 services:
-
+    
     apache:
         container_name: api-apache
         restart: unless-stopped
