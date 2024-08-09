@@ -43,7 +43,6 @@ Route::group(['prefix' => 'account'], function () {
 Route::group(['prefix' => 'accommodation'], function () {
     Route::get('/result/{code}/{language}', [AccommodationController::class, 'show']);
     Route::get('/results/filter', [AccommodationController::class, 'filter']);
-    Route::get('/results/search', [AccommodationController::class, 'search']);
     Route::get('/categories/{language}', [AccommodationController::class, 'categories']);
 });
 
@@ -51,7 +50,6 @@ Route::group(['prefix' => 'accommodation'], function () {
 Route::group(['prefix' => 'cave'], function () {
     Route::get('/result/{code}/{language}', [CaveController::class, 'show']);
     Route::get('/results/filter', [CaveController::class, 'filter']);
-    Route::get('/results/search', [CaveController::class, 'search']);
     Route::get('/categories/{language}', [CaveController::class, 'categories']);
 });
 
@@ -59,7 +57,6 @@ Route::group(['prefix' => 'cave'], function () {
 Route::group(['prefix' => 'cultural'], function () {
     Route::get('/result/{code}/{language}', [CulturalController::class, 'show']);
     Route::get('/results/filter', [CulturalController::class, 'filter']);
-    Route::get('/results/search', [CulturalController::class, 'search']);
     Route::get('/categories/{language}', [CulturalController::class, 'categories']);
 });
 
@@ -67,7 +64,6 @@ Route::group(['prefix' => 'cultural'], function () {
 Route::group(['prefix' => 'event'], function () {
     Route::get('/result/{code}/{language}', [EventController::class, 'show']);
     Route::get('/results/filter', [EventController::class, 'filter']);
-    Route::get('/results/search', [EventController::class, 'search']);
     Route::get('/categories/{language}', [EventController::class, 'categories']);
 });
 
@@ -75,7 +71,6 @@ Route::group(['prefix' => 'event'], function () {
 Route::group(['prefix' => 'fair'], function () {
     Route::get('/result/{code}/{language}', [FairController::class, 'show']);
     Route::get('/results/filter', [FairController::class, 'filter']);
-    Route::get('/results/search', [FairController::class, 'search']);
 });
 
 // Localidades
@@ -90,7 +85,6 @@ Route::group(['prefix' => 'locality'], function () {
 Route::group(['prefix' => 'museum'], function () {
     Route::get('/result/{code}/{language}', [MuseumController::class, 'show']);
     Route::get('/results/filter', [MuseumController::class, 'filter']);
-    Route::get('/results/search', [MuseumController::class, 'search']);
     Route::get('/categories/{language}', [MuseumController::class, 'categories']);
 });
 
@@ -98,7 +92,6 @@ Route::group(['prefix' => 'museum'], function () {
 Route::group(['prefix' => 'natural'], function () {
     Route::get('/result/{code}/{language}', [NaturalController::class, 'show']);
     Route::get('/results/filter', [NaturalController::class, 'filter']);
-    Route::get('/results/search', [NaturalController::class, 'search']);
     Route::get('/categories/{language}', [NaturalController::class, 'categories']);
 });
 
@@ -106,7 +99,6 @@ Route::group(['prefix' => 'natural'], function () {
 Route::group(['prefix' => 'restaurant'], function () {
     Route::get('/result/{code}/{language}', [RestaurantController::class, 'show']);
     Route::get('/results/filter', [RestaurantController::class, 'filter']);
-    Route::get('/results/search', [RestaurantController::class, 'search']);
     Route::get('/categories/{language}', [RestaurantController::class, 'categories']);
 });
 

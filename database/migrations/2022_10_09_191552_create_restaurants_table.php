@@ -46,6 +46,14 @@ return new class extends Migration {
             $table->string('nombreSubtipoRecurso')->nullable();
             $table->string('capacidad')->nullable();
 
+            // Indexes
+            $table->index('idioma');
+            $table->index('nombre');
+            $table->index('nombreProvincia');
+            $table->index('nombreMunicipio');
+            $table->index('nombreSubtipoRecurso');
+            $table->fullText('descripcion');
+
             $table->timestamps();
         });
     }

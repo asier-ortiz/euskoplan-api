@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -50,12 +49,19 @@ return new class extends Migration {
             $table->string('numHabHasta4Plazas')->nullable();
             $table->string('numHabMas4Plazas')->nullable();
 
+            // Indexes
+            $table->index('idioma');
+            $table->index('nombre');
+            $table->index('nombreProvincia');
+            $table->index('nombreMunicipio');
+            $table->index('nombreSubtipoRecurso');
+            $table->fullText('descripcion');
+
             $table->timestamps();
         });
     }
 
-
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('accommodations');
     }

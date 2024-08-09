@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -39,6 +38,16 @@ return new class extends Migration {
             $table->date('fechaInicio')->nullable();
             $table->date('fechaFin')->nullable();
 
+            // Indexes
+            $table->index('idioma');
+            $table->index('nombre');
+            $table->index('nombreProvincia');
+            $table->index('nombreMunicipio');
+            $table->index('nombreSubtipoRecurso');
+            $table->index('fechaInicio');
+            $table->index('fechaFin');
+            $table->fullText('descripcion');
+
             $table->timestamps();
         });
     }
@@ -48,3 +57,4 @@ return new class extends Migration {
         Schema::dropIfExists('events');
     }
 };
+
