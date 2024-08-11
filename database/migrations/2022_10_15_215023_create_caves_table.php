@@ -40,7 +40,7 @@ return new class extends Migration {
             // Datos patrimonio cultural
             $table->string('subtipoRecurso')->nullable();
             $table->string('nombreSubtipoRecurso')->nullable();
-            $table->longText('tipoMonumento')->nullable();
+            $table->string('tipoMonumento')->nullable();
             $table->string('periodo')->nullable();
 
             // Indexes
