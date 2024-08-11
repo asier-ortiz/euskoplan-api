@@ -38,5 +38,8 @@ class DatabaseSeeder extends Seeder
 
         $user_seeder = new UserSeeder();
         $user_seeder->run();
+
+        $plan_seeder = new PlanSeeder();
+        $plan_seeder->run();
     }
 }

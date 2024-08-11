@@ -34,7 +34,6 @@ class PlanController extends Controller
             })
             ->orderBy('votos', 'desc');
 
-        // Combinación de filtrado y búsqueda
         if (request('busqueda')) {
             $terms = explode(' ', request('busqueda'));
             $query->where(function (Builder $q) use ($terms) {
