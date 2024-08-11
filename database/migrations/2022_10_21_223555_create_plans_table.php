@@ -11,18 +11,12 @@ return new class extends Migration {
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
 
-            $table->string('idioma');
-            $table->string('titulo');
+            $table->char('idioma', 2)->index();
+            $table->string('titulo')->index();
             $table->longText('descripcion')->nullable();
             $table->integer('votos')->default(0);
             $table->boolean('publico')->default(false);
-
-            // Usuario
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
             $table->timestamps();
         });

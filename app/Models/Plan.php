@@ -5,9 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-
 
 /**
  * App\Models\Plan
@@ -20,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property int $user_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $publico
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Accommodation[] $accommodations
  * @property-read int|null $accommodations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Cave[] $caves
@@ -52,9 +51,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Plan whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Plan whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Plan whereVotos($value)
- * @mixin \Eloquent
- * @property int $publico
  * @method static \Illuminate\Database\Eloquent\Builder|Plan wherePublico($value)
+ * @mixin \Eloquent
  */
 class Plan extends Model
 {
@@ -64,66 +62,68 @@ class Plan extends Model
 
     public $timestamps = true;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'idioma', 'titulo', 'descripcion', 'votos', 'publico', 'user_id'
+    ];
 
-    protected $fillable = [];
+    protected $guarded = ['id'];
 
-    protected $dates = ['updated_at', 'created_at'];
+    protected $dates = ['created_at', 'updated_at'];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function accommodations(): BelongsToMany
+    public function accommodations(): MorphToMany
     {
         return $this->morphedByMany(Accommodation::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function caves(): BelongsToMany
+    public function caves(): MorphToMany
     {
         return $this->morphedByMany(Cave::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function culturals(): BelongsToMany
+    public function culturals(): MorphToMany
     {
         return $this->morphedByMany(Cultural::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function events(): BelongsToMany
+    public function events(): MorphToMany
     {
         return $this->morphedByMany(Event::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function fairs(): BelongsToMany
+    public function fairs(): MorphToMany
     {
         return $this->morphedByMany(Fair::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function localities(): BelongsToMany
+    public function localities(): MorphToMany
     {
         return $this->morphedByMany(Locality::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function museums(): BelongsToMany
+    public function museums(): MorphToMany
     {
         return $this->morphedByMany(Museum::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function naturals(): BelongsToMany
+    public function naturals(): MorphToMany
     {
         return $this->morphedByMany(Natural::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
     }
 
-    public function restaurants(): BelongsToMany
+    public function restaurants(): MorphToMany
     {
         return $this->morphedByMany(Restaurant::class, 'planables')
             ->withPivot('id', 'indice', 'indicaciones');
@@ -133,5 +133,4 @@ class Plan extends Model
     {
         return $this->morphToMany(User::class, 'favouritables');
     }
-
 }

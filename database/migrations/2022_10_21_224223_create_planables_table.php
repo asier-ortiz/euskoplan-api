@@ -10,22 +10,16 @@ return new class extends Migration {
     {
         Schema::create('planables', function (Blueprint $table) {
             $table->id();
-
             $table->integer('indice');
             $table->longText('indicaciones')->nullable();
-
-            // Plan
-            $table->unsignedBigInteger('plan_id');
-            $table->foreign('plan_id')
-                ->references('id')
-                ->on('plans')
-                ->onDelete('cascade');
-
-            // Recurso
-            $table->unsignedBigInteger('planables_id');
-            $table->string('planables_type');
-
+            $table->foreignId('plan_id')->constrained()->onDelete('cascade');
+            $table->morphs('planables'); // Usa morphs para generar automáticamente los campos de polimorfismo
             $table->timestamps();
+        });
+
+        // Añade el índice compuesto para optimizar consultas
+        Schema::table('planables', function (Blueprint $table) {
+            $table->index(['plan_id', 'indice']);
         });
     }
 

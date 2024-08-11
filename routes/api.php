@@ -102,6 +102,10 @@ Route::group(['prefix' => 'restaurant'], function () {
     Route::get('/categories/{language}', [RestaurantController::class, 'categories']);
 });
 
+// Planes
+Route::apiResource('plan', PlanController::class)->only(['index', 'show']);
+Route::get('plan/{id}/route/{profile}', [PlanController::class, 'route']);
+
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -114,19 +118,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Planes
-    Route::apiResource('plan', PlanController::class);
-    Route::get('plan/results/search', [PlanController::class, 'search']);
+    Route::apiResource('plan', PlanController::class)->except(['index', 'show']);
     Route::get('plan/results/user', [PlanController::class, 'userPlans']);
     Route::put('plan/upvote/{id}', [PlanController::class, 'upvote']);
     Route::put('plan/downvote/{id}', [PlanController::class, 'downvote']);
-    Route::get('plan/{id}/route/{profile}', [PlanController::class, 'route']);
 
     // Pasos
-    Route::group(['prefix' => 'step'], function () {
-        Route::post('/{planId}', [StepController::class, 'store']);
-        Route::put('/{id}', [StepController::class, 'update']);
-        Route::delete('/{id}', [StepController::class, 'destroy']);
-    });
+    Route::apiResource('step', StepController::class)->only(['store', 'update', 'destroy']);
 
     // Favoritos
     Route::group(['prefix' => 'favourite'], function () {

@@ -16,93 +16,63 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PlanController extends Controller
 {
-
     public function index(): AnonymousResourceCollection
     {
-        return PlanResource::collection(
-            Plan::query()
-                ->when(request('idioma'), function (Builder $query) {
-                    $query->where('idioma', '=', request('idioma'));
-                })
-                ->when(request('titulo'), function (Builder $query) {
-                    $query->where('titulo', 'like', '%' . request('titulo') . '%');
-                })
-                ->when(request('descripcion'), function (Builder $query) {
-                    $query->where('descripcion', 'like', '%' . request('descripcion') . '%');
-                })
-                ->when(request('id_usuario'), function (Builder $query) {
-                    $query->where('user_id', '=', request('id_usuario'));
-                })
-                ->when(request('limite'), function (Builder $query) {
-                    $query->take(request('limite'));
-                })
-                ->orderBy('votos', 'desc')
-                ->where('publico', '=', true)
-                ->get());
-    }
+        $query = Plan::query()
+            ->where('publico', true)
+            ->when(request('idioma'), function (Builder $query) {
+                $query->where('idioma', '=', request('idioma'));
+            })
+            ->when(request('titulo'), function (Builder $query) {
+                $query->where('titulo', 'like', '%' . request('titulo') . '%');
+            })
+            ->when(request('descripcion'), function (Builder $query) {
+                $query->where('descripcion', 'like', '%' . request('descripcion') . '%');
+            })
+            ->when(request('limite'), function (Builder $query) {
+                $query->take(request('limite'));
+            })
+            ->orderBy('votos', 'desc');
 
-    public function search(): AnonymousResourceCollection
-    {
-        $terms = explode(" ", request('busqueda'));
+        // Combinación de filtrado y búsqueda
+        if (request('busqueda')) {
+            $terms = explode(' ', request('busqueda'));
+            $query->where(function (Builder $q) use ($terms) {
+                foreach ($terms as $term) {
+                    $q->orWhere('titulo', 'like', '%' . $term . '%')
+                        ->orWhere('descripcion', 'like', '%' . $term . '%')
+                        ->orWhereHas('accommodations', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('caves', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('culturals', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('events', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('fairs', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('localities', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('museums', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('naturals', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        })
+                        ->orWhereHas('restaurants', function (Builder $q) use ($term) {
+                            $q->where('indicaciones', 'like', '%' . $term . '%');
+                        });
+                }
+            });
+        }
 
-        return PlanResource::collection(
-            Plan::query()
-                ->where(function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('titulo', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhere(function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('descripcion', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('accommodations', function (Builder $query) use ($terms) {
-                    $query->where('indicaciones', 'like', '%' . request('busqueda') . '%');
-                })
-                ->orWhereHas('caves', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('culturals', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('events', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('fairs', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('localities', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('museums', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('naturals', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->orWhereHas('restaurants', function (Builder $query) use ($terms) {
-                    foreach ($terms as $term) {
-                        $query->where('indicaciones', 'like', '%' . $term . '%');
-                    }
-                })
-                ->where('idioma', '=', request('idioma'))
-                ->where('publico', '=', true)
-                ->get());
+        return PlanResource::collection($query->get());
     }
 
     public function userPlans(): AnonymousResourceCollection
@@ -114,14 +84,15 @@ class PlanController extends Controller
     public function show($id): \Illuminate\Http\Response|PlanResource|Application|ResponseFactory
     {
         $plan = Plan::find($id);
-        if (!Gate::allows('read-plan', $plan)) return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
-        return new PlanResource(Plan::find($id));
+        if (!$plan || !Gate::allows('read-plan', $plan)) {
+            return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+        return new PlanResource($plan);
     }
 
     public function store(PlanCreateRequest $request): \Illuminate\Http\Response|Application|ResponseFactory
     {
         $validatedData = $request->validated();
-
         $plan = Plan::create([
             'idioma' => $validatedData['idioma'],
             'titulo' => $validatedData['titulo'],
@@ -130,74 +101,60 @@ class PlanController extends Controller
             'user_id' => request()->user()->id
         ]);
 
-        $steps = [];
-        foreach ($validatedData['pasos'] as $step) {
-            $steps[] = [
-                'indice' => $step['indice'],
-                'indicaciones' => $step['indicaciones'],
-                'plan_id' => $plan->id,
-                'planables_id' => $step['id_recurso'],
-                'planables_type' => $step['tipo_recurso']
-            ];
-        }
-
-        StepController::bulkStore($steps);
+        StepController::bulkStore($validatedData['pasos'], $plan->id);
         return response(new PlanResource($plan), Response::HTTP_CREATED);
     }
 
     public function update(PlanUpdateRequest $request, $id): \Illuminate\Http\Response|Application|ResponseFactory
     {
         $plan = Plan::find($id);
-        if (!Gate::allows('update-plan', $plan)) return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        if (!Gate::allows('update-plan', $plan)) {
+            return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
         $validatedData = $request->validated();
-        $plan->update(
-            [
-                'titulo' => $validatedData['titulo'],
-                'descripcion' => $validatedData['descripcion'],
-                'publico' => $validatedData['publico']
-            ]);
+        $plan->update($validatedData);
         return response(new PlanResource($plan), Response::HTTP_ACCEPTED);
     }
 
     public function destroy($id): \Illuminate\Http\Response|Application|ResponseFactory
     {
         $plan = Plan::find($id);
-        if (!Gate::allows('destroy-plan', $plan)) return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
-        Plan::destroy($id);
+        if (!Gate::allows('destroy-plan', $plan)) {
+            return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+        $plan->delete();
         return response(null, Response::HTTP_NO_CONTENT);
     }
 
-    public function upvote($id)
+    public function upvote($id): void
     {
         $plan = Plan::find($id);
-        $votes = $plan->votos + 1;
-        $plan->update(['votos' => $votes]);
+        $plan->increment('votos');
     }
 
-    public function downvote($id)
+    public function downvote($id): void
     {
         $plan = Plan::find($id);
-        $votes = $plan->votos - 1;
-        $plan->update(['votos' => $votes]);
+        $plan->decrement('votos');
     }
 
     public function route($id, $profile): mixed
     {
         $plan = Plan::find($id);
-        if (!$plan) return response(['error' => 'No such plan'], Response::HTTP_BAD_REQUEST);
-        if (!Gate::allows('read-plan', $plan)) return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        if (!$plan || !Gate::allows('read-plan', $plan)) {
+            return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
 
         $planResource = new PlanResource($plan);
         $steps = json_decode($planResource->toJson())->pasos;
-        if (sizeof($steps) < 2) return response(['error' => 'No enough plan steps'], Response::HTTP_BAD_REQUEST);
+        if (count($steps) < 2) {
+            return response(['error' => 'Not enough plan steps'], Response::HTTP_BAD_REQUEST);
+        }
 
-        $coordinatesString = '';
-        foreach ($steps as $step) $coordinatesString .= $step->recurso->longitud . ',' . $step->recurso->latitud . ';';
-        $coordinatesString = rtrim($coordinatesString, ';');
+        $coordinatesString = implode(';', array_map(fn($step) => $step->recurso->longitud . ',' . $step->recurso->latitud, $steps));
 
         $token = env('MAP_BOX_TOKEN');
         $response = Http::get("https://api.mapbox.com/directions/v5/mapbox/$profile/$coordinatesString?alternatives=false&geometries=geojson&language=es&overview=simplified&steps=false&access_token=$token");
         return $response->json();
     }
-
 }
