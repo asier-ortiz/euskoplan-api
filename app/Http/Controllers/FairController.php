@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\FairCompactResource;
 use App\Http\Resources\FairResource;
 use App\Models\Fair;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +21,7 @@ class FairController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return FairResource::collection(
+        return FairCompactResource::collection(
             Fair::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\NaturalCompactResource;
 use App\Http\Resources\NaturalResource;
 use App\Models\Natural;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +21,7 @@ class NaturalController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return NaturalResource::collection(
+        return NaturalCompactResource::collection(
             Natural::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

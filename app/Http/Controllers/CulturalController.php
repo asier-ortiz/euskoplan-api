@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CulturalCompactResource;
 use App\Http\Resources\CulturalResource;
 use App\Models\Cultural;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ class CulturalController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return CulturalResource::collection(
+        return CulturalCompactResource::collection(
             Cultural::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

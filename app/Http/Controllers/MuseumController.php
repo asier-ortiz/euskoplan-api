@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\MuseumCompactResource;
 use App\Http\Resources\MuseumResource;
 use App\Models\Museum;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ class MuseumController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return MuseumResource::collection(
+        return MuseumCompactResource::collection(
             Museum::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

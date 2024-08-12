@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\EventCompactResource;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ class EventController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return EventResource::collection(
+        return EventCompactResource::collection(
             Event::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

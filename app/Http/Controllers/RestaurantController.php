@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\RestaurantCompactResource;
 use App\Http\Resources\RestaurantResource;
 use App\Models\Restaurant;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ class RestaurantController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return RestaurantResource::collection(
+        return RestaurantCompactResource::collection(
             Restaurant::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CaveCompactResource;
 use App\Http\Resources\CaveResource;
 use App\Models\Cave;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -21,7 +22,7 @@ class CaveController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return CaveResource::collection(
+        return CaveCompactResource::collection(
             Cave::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));

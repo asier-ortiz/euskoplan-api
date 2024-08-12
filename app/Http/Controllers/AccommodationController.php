@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\AccommodationResource;
+use App\Http\Resources\AccommodationCompactResource;
 use App\Models\Accommodation;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -21,7 +22,7 @@ class AccommodationController extends Controller
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        return AccommodationResource::collection(
+        return AccommodationCompactResource::collection(
             Accommodation::query()
                 ->when(request('idioma'), function (Builder $query) {
                     $query->where('idioma', '=', request('idioma'));
