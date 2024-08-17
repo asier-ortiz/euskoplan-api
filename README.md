@@ -1,46 +1,49 @@
+
+# 🚧 Under Development 🚧
+
 # Euskoplan API
 
-Backend en formato API Rest creado en Laravel para el proyecto Euskoplan.  
+Backend in REST API format created in Laravel for the [Euskoplan Client](https://github.com/asier-ortiz/euskoplan-client) project.
 
-Permite la creación y gestión de planes turísticos utilizando como fuente de datos diferentes catálogos de la web [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) en formato XML. Esta información se va actualizando en la base de datos del proyecto mediante un parser y una tarea Cron.  
+It allows the creation and management of tourism plans using various catalogs from the [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) website in XML format as data sources. This information is updated in the project's database through a parser and a Cron job.
 
-Utiliza la API de Mapbox para calcular la ruta del itinerario y gestióna la autorización y autenticación mediante [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum) y [Laravel Gates](https://laravel.com/docs/10.x/authorization#gates).  
+It uses the Mapbox API to calculate the itinerary route and manages authorization and authentication using [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum) and [Laravel Gates](https://laravel.com/docs/10.x/authorization#gates).
 
-# Instrucciones 
+# Instructions
 
-Antes de comenzar asegúrate de tener instalado Docker.
+Before starting, make sure you have Docker installed.
 
 - [Docker](https://www.docker.com/)
 
-## 1. Fichero de configuración .env de Laravel
+## 1. Laravel .env Configuration File
 
-- Sitúate dentro del directorio del proyecto Laravel
+- Navigate to the Laravel project directory
 
 ```shell
 cd euskoplan-api
 ```
 
-- Copia `.env.example` a `.env`
+- Copy `.env.example` to `.env`
 
-En Windows
+On Windows
 
 ```shell
 copy .env.example .env
 ```
 
-En macOS / Linux
+On macOS / Linux
 
 ```shell
 cp .env.example .env
 ```
 
-- Modifica el nombre de la aplicación en el fichero `.env`
+- Modify the application name in the `.env` file
 
 ```text
 APP_NAME=Euskoplan
 ```
 
-- Modifica las credenciales para la BBDD en el fichero `.env`
+- Modify the database credentials in the `.env` file
 
 ```text
 DB_CONNECTION=mysql
@@ -51,7 +54,7 @@ DB_USERNAME=user
 DB_PASSWORD=password
 ```
 
-- Modifica los datos para el servidor de e-mail en el fichero `.env`
+- Modify the email server settings in the `.env` file
 
 ```text
 MAIL_MAILER=smtp
@@ -64,41 +67,41 @@ MAIL_FROM_ADDRESS=euskoplan@test.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-- Añade el token de Mapbox en el fichero `.env`
+- Add the Mapbox token in the `.env` file
 
 ```text
 MAP_BOX_TOKEN="<YOUR_KEY>"
 ```
 
-## 2. Inicia Docker y arranca los contenedores
+## 2. Start Docker and Launch the Containers
 
-- Desde el directorio raíz del proyecto ejecutar el siguiente comando y esperar a que termine:
+- From the root directory of the project, run the following command and wait for it to finish:
 
 ```shell
 docker compose up -d
 ```
 
-## 3. Directorio de dependencias vendor y generación de clave cifrado
+## 3. Vendor Directory and Encryption Key Generation
 
-> :warning: Este paso solo es necesario la primera vez.
+> :warning: This step is only necessary the first time.
 
-- Desde el directorio raíz del proyecto ejecutar el siguiente commando y esperar a que termine la instalación:
+- From the root directory of the project, run the following command and wait for the installation to complete:
 
 ```shell
 docker compose exec php composer install
-```  
+```
 
-> :warning: Este paso solo es necesario la primera vez.
+> :warning: This step is only necessary the first time.
 
-- Desde el directorio raíz del proyecto ejecutar el siguiente commando:
+- From the root directory of the project, run the following command:
 
 ```shell
 docker compose exec php php artisan key:generate
-```  
+```
 
-## 4. Migraciones
+## 4. Migrations
 
-- Para generar las tablas, desde el directorio raíz del proyecto ejecutar:
+- To generate the tables, from the root directory of the project, run:
 
 ```bash
 docker compose exec php php artisan migrate
@@ -106,42 +109,40 @@ docker compose exec php php artisan migrate
 
 ## 5. Seeders
 
-- Para cargar los datos a la BBDD, desde el directorio raíz del proyecto ejecutar:
+- To load the data into the database, from the root directory of the project, run:
 
 ```bash
 docker compose exec php php artisan db:seed
 ```
 
-## 6. Accede a los servicios
+## 6. Access the Services
 
-- [phpMyAdmin](http://localhost:8081) (credenciales --> db / user / password)
+- [phpMyAdmin](http://localhost:8081) (credentials --> db / user / password)
 - [Mailhog](http://localhost:8025/)
-- [Postman](https://www.postman.com/): Descargar el siguiente [archivo](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) e importarlo para probar los endpoints
-    
+- [Postman](https://www.postman.com/): Download the following [file](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) and import it to test the endpoints
 
-## 7. Acceso shell al contenedor de la aplicación
+## 7. Shell Access to the Application Container
 
 ```shell
 docker compose exec php /bin/bash
-```  
+```
 
-## 8. Detén los contenedores
+## 8. Stop the Containers
 
 ```shell
 docker compose stop
-``` 
+```
 
-## Otros
+## Other
 
-- Existe un usuario de prueba para acceder a la aplicación web con las siguientes credenciales:
+- There is a test user to access the web application with the following credentials:
     - Username: test
     - Email: test@test.com
     - Password: password
 
+- The database can be updated via a Cron job by running the following command:
 
-- Se puede actualizar la BB DD mediante una tarea Cron lanzando el siguiente comando:
-
-> :warning: Puede tardar horas en completarse.
+> :warning: It may take hours to complete.
 
 ```bash
 docker compose exec php php artisan collections:cron
@@ -150,4 +151,3 @@ docker compose exec php php artisan collections:cron
 ## Screenshots
 
 <img src="screenshots/screenshot-1.png" width="300">
-
