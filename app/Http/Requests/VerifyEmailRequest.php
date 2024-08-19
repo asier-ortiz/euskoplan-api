@@ -15,8 +15,7 @@ class VerifyEmailRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'token' => 'required|string|min:40|max:40',
-            'email' => 'required|email',
+            'token' => 'required|string|min:40|max:40'
         ];
     }
 }

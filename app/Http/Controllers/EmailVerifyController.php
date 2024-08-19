@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Models\EmailVerify;
 use App\Models\User;
 use App\Notifications\EmailVerifyNotificationRequest;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -54,18 +55,29 @@ class EmailVerifyController extends Controller
     {
         $validatedData = $request->validated();
 
-        $emailVerify = EmailVerify::where([
-            ['token', $validatedData['token']],
-            ['email', $validatedData['email']]
-        ])->first();
+        $emailVerify = EmailVerify::where('token', $validatedData['token'])->first();
 
-        if (!$emailVerify) return response(['message' => 'This email verification token is invalid'], Response::HTTP_NOT_FOUND);
+        if (!$emailVerify) {
+            return response(['message' => 'This email verification token is invalid'], Response::HTTP_NOT_FOUND);
+        }
+
         $user = User::where('email', $emailVerify->email)->first();
-        if (!$user) return response(['message' => 'We cannot find a user with that email address'], Response::HTTP_NOT_FOUND);
+
+        if (!$user) {
+            return response(['message' => 'We cannot find a user with that email address'], Response::HTTP_NOT_FOUND);
+        }
+
         $user->email_verified_at = Carbon::now()->toDateTimeString();
         $user->save();
         $emailVerify->delete();
-        return response(new UserResource($user));
+
+        Auth::login($user);
+        $jwt = $user->createToken('token')->plainTextToken;
+
+        return response([
+            'user' => new UserResource($user),
+            'token' => $jwt
+        ], Response::HTTP_OK);
     }
 
 }
