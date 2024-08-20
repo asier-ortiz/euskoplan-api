@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PlanCreateRequest;
 use App\Http\Requests\PlanUpdateRequest;
+use App\Http\Resources\PlanCompactResource;
 use App\Http\Resources\PlanResource;
 use App\Models\Plan;
 use Illuminate\Contracts\Foundation\Application;
@@ -71,13 +72,13 @@ class PlanController extends Controller
             });
         }
 
-        return PlanResource::collection($query->get());
+        return PlanCompactResource::collection($query->get());
     }
 
     public function userPlans(): AnonymousResourceCollection
     {
         $user = request()->user();
-        return PlanResource::collection(Plan::where('user_id', '=', $user->id)->get());
+        return PlanCompactResource::collection(Plan::where('user_id', '=', $user->id)->get());
     }
 
     public function show($id): \Illuminate\Http\Response|PlanResource|Application|ResponseFactory
