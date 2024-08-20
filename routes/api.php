@@ -124,7 +124,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('plan/downvote/{id}', [PlanController::class, 'downvote']);
 
     // Pasos
-    Route::apiResource('step', StepController::class)->only(['store', 'update', 'destroy']);
+    Route::post('/step/{id}', [StepController::class, 'store']);
+    Route::put('/step/{id}', [StepController::class, 'store']);
+    Route::delete('/step/{id}', [StepController::class, 'store']);
 
     // Favoritos
     Route::group(['prefix' => 'favourite'], function () {
