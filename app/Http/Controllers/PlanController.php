@@ -78,7 +78,7 @@ class PlanController extends Controller
     public function userPlans(): AnonymousResourceCollection
     {
         $user = request()->user();
-        return PlanCompactResource::collection(Plan::where('user_id', '=', $user->id)->get());
+        return PlanResource::collection(Plan::where('user_id', '=', $user->id)->get());
     }
 
     public function show($id): \Illuminate\Http\Response|PlanResource|Application|ResponseFactory
