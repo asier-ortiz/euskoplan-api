@@ -67,10 +67,11 @@ MAIL_FROM_ADDRESS=euskoplan@test.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-- Add the Mapbox token in the `.env` file
+- Add Mapbox and OpenAI tokens in the `.env` file
 
 ```text
 MAP_BOX_TOKEN="<YOUR_KEY>"
+OPENAI_API_KEY="<YOUR_KEY>"
 ```
 
 ## 2. Start Docker and Launch the Containers

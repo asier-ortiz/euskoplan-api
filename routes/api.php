@@ -122,6 +122,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('plan/results/user', [PlanController::class, 'userPlans']);
     Route::put('plan/upvote/{id}', [PlanController::class, 'upvote']);
     Route::put('plan/downvote/{id}', [PlanController::class, 'downvote']);
+    Route::post('plan/suggest-itinerary', [PlanController::class, 'suggestItinerary']);
 
     // Pasos
     Route::post('/step/{id}', [StepController::class, 'store']);

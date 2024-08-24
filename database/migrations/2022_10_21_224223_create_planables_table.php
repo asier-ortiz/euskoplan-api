@@ -11,6 +11,7 @@ return new class extends Migration {
         Schema::create('planables', function (Blueprint $table) {
             $table->id();
             $table->integer('indice');
+            $table->integer('dia')->default(1); // Nuevo campo 'dia' para indicar el día del paso
             $table->longText('indicaciones')->nullable();
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
             $table->morphs('planables'); // Usa morphs para generar automáticamente los campos de polimorfismo
@@ -20,6 +21,7 @@ return new class extends Migration {
         // Añade el índice compuesto para optimizar consultas
         Schema::table('planables', function (Blueprint $table) {
             $table->index(['plan_id', 'indice']);
+            $table->index(['plan_id', 'dia']); // Índice para mejorar consultas basadas en 'dia'
         });
     }
 
