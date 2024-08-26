@@ -21,6 +21,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
@@ -175,10 +176,17 @@ class PlanController extends Controller
         $validatedData = $request->validated();
 
         $province = $validatedData['provincia'];
+        $month = $validatedData['mes'];  // Nueva entrada para el mes en formato 'Agosto 2024'
         $days = $validatedData['dias'];
         $tripType = $validatedData['tipo_viaje'];
-        $startDate = $validatedData['fecha_inicio'];
-        $endDate = date('Y-m-d', strtotime($startDate . ' + ' . ($days - 1) . ' days'));
+
+        // Crear una clave única para el caché basada en la combinación de las opciones seleccionadas
+        $cacheKey = 'itinerary_' . md5($province . $month . $days . $tripType);
+
+        // Comprobar si existe en la caché
+        if (Cache::has($cacheKey)) {
+            return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
+        }
 
         // Filtrar los lugares de interés según la provincia seleccionada y tipo de viaje
         $filteredPlaces = collect();
@@ -188,7 +196,8 @@ class PlanController extends Controller
             $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->take(5)->get());
             $filteredPlaces = $filteredPlaces->merge(Locality::where('nombreProvincia', $province)->take(5)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereBetween('fechaInicio', [$startDate, $endDate])
+                ->whereMonth('fechaInicio', '=', date('m', strtotime($month)))
+                ->whereYear('fechaInicio', '=', date('Y', strtotime($month)))
                 ->whereIn('nombreSubtipoRecurso', [
                     'Conciertos',
                     'Danza y Teatro',
@@ -197,40 +206,48 @@ class PlanController extends Controller
                     'Fiestas y Tradiciones',
                     'Visitas y rutas guiadas'
                 ])
-                ->take(5)->get());
+                ->get());
 
         } elseif ($tripType == 'aventura') {
             $filteredPlaces = Natural::where('nombreProvincia', $province)->take(5)->get();
             $filteredPlaces = $filteredPlaces->merge(Cave::where('nombreProvincia', $province)->take(5)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereBetween('fechaInicio', [$startDate, $endDate])
+                ->whereMonth('fechaInicio', '=', date('m', strtotime($month)))
+                ->whereYear('fechaInicio', '=', date('Y', strtotime($month)))
                 ->whereIn('nombreSubtipoRecurso', [
                     'Deportes',
                     'Visitas y rutas guiadas',
                     'Festivales',
                     'Otros'
                 ])
-                ->take(5)->get());
+                ->get());
 
         } elseif ($tripType == 'familiar') {
             $filteredPlaces = Fair::where('nombreProvincia', $province)->take(5)->get();
             $filteredPlaces = $filteredPlaces->merge(Natural::where('nombreProvincia', $province)->take(5)->get());
             $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->take(5)->get());
-            $filteredPlaces = $filteredPlaces->merge(Fair::where('nombreProvincia', $province)->take(5)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereBetween('fechaInicio', [$startDate, $endDate])
+                ->whereMonth('fechaInicio', '=', date('m', strtotime($month)))
+                ->whereYear('fechaInicio', '=', date('Y', strtotime($month)))
                 ->whereIn('nombreSubtipoRecurso', [
                     'Actividades familiares',
                     'Eventos gastronómicos',
                     'Fiestas y Tradiciones',
                     'Festivales'
                 ])
-                ->take(5)->get());
+                ->get());
         }
 
+        // Agrupar eventos por días y seleccionar los días con más eventos
+        $daysWithMostEvents = $filteredPlaces->groupBy(function ($place) {
+            return date('Y-m-d', strtotime($place->fechaInicio));
+        })->sortByDesc(function ($group) {
+            return $group->count();
+        })->take($days);
+
         // Calcular el "centro" de las coordenadas de los lugares seleccionados
-        $centerLatitude = $filteredPlaces->avg('gmLatitud');
-        $centerLongitude = $filteredPlaces->avg('gmLongitud');
+        $centerLatitude = $daysWithMostEvents->flatten()->avg('gmLatitud');
+        $centerLongitude = $daysWithMostEvents->flatten()->avg('gmLongitud');
 
         // Filtrar los alojamientos y restaurantes cercanos
         $accommodations = Accommodation::where('nombreProvincia', $province)
@@ -244,7 +261,7 @@ class PlanController extends Controller
             ->get();
 
         // Preparar los recursos para la API
-        $placesForApi = $filteredPlaces->map(function ($place) {
+        $placesForApi = $daysWithMostEvents->flatten()->map(function ($place) {
             return [
                 'id' => $place->id,
                 'type' => get_class($place),
@@ -273,24 +290,24 @@ class PlanController extends Controller
 
         // Crear el prompt para OpenAI
         $prompt = 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-                   Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
+               Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
 
-        Devuelve la respuesta en formato JSON con la estructura:
-        [
-            {
-                "indice": número del paso,
-                "dia": número del día,
-                "indicaciones": "descripción del paso",
-                "planables_id": id del recurso utilizado,
-                "planables_type": "tipo del recurso utilizado"
-            },
-            ...
-        ]
+    Devuelve la respuesta en formato JSON con la estructura:
+    [
+        {
+            "indice": número del paso,
+            "dia": número del día,
+            "indicaciones": "descripción del paso",
+            "planables_id": id del recurso utilizado,
+            "planables_type": "tipo del recurso utilizado"
+        },
+        ...
+    ]
 
-        Aquí tienes los recursos disponibles:
-        Lugares de interés: ' . json_encode($placesForApi->toArray()) . ',
-        Alojamientos: ' . json_encode($accommodationsForApi->toArray()) . ',
-        Restaurantes: ' . json_encode($restaurantsForApi->toArray()) . '.';
+    Aquí tienes los recursos disponibles:
+    Lugares de interés: ' . json_encode($placesForApi->toArray()) . ',
+    Alojamientos: ' . json_encode($accommodationsForApi->toArray()) . ',
+    Restaurantes: ' . json_encode($restaurantsForApi->toArray()) . '.';
 
         // Enviar la solicitud a la API de OpenAI
         $openAiApiKey = env('OPENAI_API_KEY');
@@ -318,6 +335,9 @@ class PlanController extends Controller
                 'user_id' => $request->user()->id,
                 'steps' => $steps,
             ];
+
+            // Guardar en la caché antes de devolver la respuesta
+            Cache::put($cacheKey, $tempPlan, 60 * 60 * 24); // Caché por 24 horas
 
             // Devolver el plan temporal como respuesta
             return response()->json($tempPlan, Response::HTTP_OK);

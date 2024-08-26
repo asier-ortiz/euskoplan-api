@@ -89,7 +89,7 @@ services:
 
     redisinsight:
         image: redislabs/redisinsight:latest
-        container_name: redisinsight
+        container_name: api-redisinsight
         restart: unless-stopped
         ports:
             - "5540:5540"

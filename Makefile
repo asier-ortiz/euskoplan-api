@@ -8,6 +8,7 @@ help:
 	@echo workspace
 	@echo composer-install
 	@echo db-shell
+	@echo redis-shell
 	@echo logs
 	@echo stats
 	@echo clean
