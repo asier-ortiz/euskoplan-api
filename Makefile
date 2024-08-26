@@ -37,6 +37,10 @@ composer-install:
 db-shell:
 	@docker-compose exec db mysql -h 127.0.0.1 -P${DB_PORT} -u${DB_USERNAME} -p${DB_PASSWORD} ${DB_DATABASE}
 
+.PHONY: redis-shell
+redis-shell:
+	@docker-compose exec redis redis-cli -a ${REDIS_PASSWORD}
+
 .PHONY: logs
 logs:
 	@docker-compose logs

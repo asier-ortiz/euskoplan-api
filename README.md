@@ -3,11 +3,15 @@
 
 # Euskoplan API
 
-Backend in REST API format created in Laravel for the [Euskoplan Client](https://github.com/asier-ortiz/euskoplan-client) project.
+A REST API backend built in Laravel for the [Euskoplan Client](https://github.com/asier-ortiz/euskoplan-client) project.
 
-It allows the creation and management of tourism plans using various catalogs from the [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) website in XML format as data sources. This information is updated in the project's database through a parser and a Cron job.
+It allows users to create and manage tourism plans using various catalogs from [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) and generate personalized itineraries.
 
-It uses the Mapbox API to calculate the itinerary route and manages authorization and authentication using [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum) and [Laravel Gates](https://laravel.com/docs/10.x/authorization#gates).
+Users can either manually create their own itineraries or automatically generate them using AI via the OpenAI API.
+
+The information is sourced from XML files, which are parsed and automatically updated in the database using a Cron job.
+
+The API also integrates with Mapbox for route calculation and manages authentication and authorization with [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum) and [Laravel Gates](https://laravel.com/docs/10.x/authorization#gates).
 
 # Instructions
 
@@ -52,6 +56,13 @@ DB_PORT=3306
 DB_DATABASE=api
 DB_USERNAME=user
 DB_PASSWORD=password
+```
+- Modify Redis settings in the `.env` file
+
+```text
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=password
 ```
 
 - Modify the email server settings in the `.env` file
@@ -119,6 +130,7 @@ docker compose exec php php artisan db:seed
 ## 6. Access the Services
 
 - [phpMyAdmin](http://localhost:8081) (credentials --> db / user / password)
+- [RedisInsight](http://localhost:5540) (Host: `api-redis`, Port: `6379`, Username: leave blank, Password: `password`)
 - [Mailhog](http://localhost:8025/)
 - [Postman](https://www.postman.com/): Download the following [file](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) and import it to test the endpoints
 

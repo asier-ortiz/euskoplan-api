@@ -215,7 +215,8 @@ class PlanController extends Controller
         } elseif ($tripType == 'familiar') {
             $filteredPlaces = Fair::where('nombreProvincia', $province)->take(5)->get();
             $filteredPlaces = $filteredPlaces->merge(Natural::where('nombreProvincia', $province)->take(5)->get());
-            $filteredPlaces = $filteredPlaces->merge(Cave::where('nombreProvincia', $province)->take(5)->get());
+            $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->take(5)->get());
+            $filteredPlaces = $filteredPlaces->merge(Fair::where('nombreProvincia', $province)->take(5)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
                 ->whereBetween('fechaInicio', [$startDate, $endDate])
                 ->whereIn('nombreSubtipoRecurso', [
@@ -272,21 +273,24 @@ class PlanController extends Controller
 
         // Crear el prompt para OpenAI
         $prompt = 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
-Devuelve la respuesta en formato JSON con la estructura:
-[
-    {
-        "indice": número del paso,
-        "dia": número del día,
-        "indicaciones": "descripción del paso",
-        "planables_id": id del recurso utilizado,
-        "planables_type": "tipo del recurso utilizado"
-    },
-    ...
-] Aquí tienes los recursos disponibles:
-Lugares de interés: ' . json_encode($placesForApi->toArray()) . ',
-Alojamientos: ' . json_encode($accommodationsForApi->toArray()) . ',
-Restaurantes: ' . json_encode($restaurantsForApi->toArray()) . '.';
+                   Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
+
+        Devuelve la respuesta en formato JSON con la estructura:
+        [
+            {
+                "indice": número del paso,
+                "dia": número del día,
+                "indicaciones": "descripción del paso",
+                "planables_id": id del recurso utilizado,
+                "planables_type": "tipo del recurso utilizado"
+            },
+            ...
+        ]
+
+        Aquí tienes los recursos disponibles:
+        Lugares de interés: ' . json_encode($placesForApi->toArray()) . ',
+        Alojamientos: ' . json_encode($accommodationsForApi->toArray()) . ',
+        Restaurantes: ' . json_encode($restaurantsForApi->toArray()) . '.';
 
         // Enviar la solicitud a la API de OpenAI
         $openAiApiKey = env('OPENAI_API_KEY');

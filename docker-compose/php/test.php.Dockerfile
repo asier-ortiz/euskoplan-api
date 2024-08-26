@@ -21,3 +21,5 @@ RUN pecl install xdebug && docker-php-ext-enable xdebug
 COPY /docker-compose/php/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 COPY /docker-compose/php/error_reporting.ini /usr/local/etc/php/conf.d/error_reporting.ini
+
+RUN pecl install redis && docker-php-ext-enable redis
