@@ -176,10 +176,11 @@ class PlanController extends Controller
 
         $province = $validatedData['provincia'];
         $month = $validatedData['mes'];
+        $year = $validatedData['año'];
         $days = $validatedData['dias'];
         $tripType = $validatedData['tipo_viaje'];
 
-        $cacheKey = 'itinerary_' . md5($province . $month . $days . $tripType);
+        $cacheKey = 'itinerary_' . md5($province . $month . $year . $days . $tripType);
 
         if (Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
@@ -192,30 +193,28 @@ class PlanController extends Controller
             $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Locality::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereMonth('fechaInicio', '=', date('m', strtotime($month)))
-                ->whereYear('fechaInicio', '=', date('Y', strtotime($month)))
+                ->whereMonth('fechaInicio', '=', $month)
+                ->whereYear('fechaInicio', '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Conciertos', 'Danza y Teatro', 'Exposiciones',
                     'Festivales', 'Fiestas y Tradiciones', 'Visitas y rutas guiadas'
                 ])->get());
-
         } elseif ($tripType == 'aventura') {
             $filteredPlaces = Natural::where('nombreProvincia', $province)->get();
             $filteredPlaces = $filteredPlaces->merge(Cave::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereMonth('fechaInicio', '=', date('m', strtotime($month)))
-                ->whereYear('fechaInicio', '=', date('Y', strtotime($month)))
+                ->whereMonth('fechaInicio', '=', $month)
+                ->whereYear('fechaInicio', '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Deportes', 'Visitas y rutas guiadas', 'Festivales', 'Otros'
                 ])->get());
-
         } elseif ($tripType == 'familiar') {
             $filteredPlaces = Fair::where('nombreProvincia', $province)->get();
             $filteredPlaces = $filteredPlaces->merge(Natural::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereMonth('fechaInicio', '=', date('m', strtotime($month)))
-                ->whereYear('fechaInicio', '=', date('Y', strtotime($month)))
+                ->whereMonth('fechaInicio', '=', $month)
+                ->whereYear('fechaInicio', '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Actividades familiares', 'Eventos gastronómicos',
                     'Fiestas y Tradiciones', 'Festivales'
@@ -235,11 +234,11 @@ class PlanController extends Controller
         $accommodations = Accommodation::where('nombreProvincia', $province)
             ->where(function ($query) use ($tripType) {
                 if ($tripType == 'cultura') {
-                    $query->whereIn('nombre_subtipo_recurso', ['Hotel', 'Pensión']);
+                    $query->whereIn('nombreSubtipoRecurso', ['Hotel', 'Pensión']);
                 } elseif ($tripType == 'aventura') {
-                    $query->whereIn('nombre_subtipo_recurso', ['Camping', 'Casa Rural']);
+                    $query->whereIn('nombreSubtipoRecurso', ['Camping', 'Casa Rural']);
                 } elseif ($tripType == 'familiar') {
-                    $query->whereIn('nombre_subtipo_recurso', ['Agroturismo', 'Apartamento']);
+                    $query->whereIn('nombreSubtipoRecurso', ['Agroturismo', 'Apartamento']);
                 }
             })
             ->orderByRaw("(6371 * acos(cos(radians($morningCenterLatitude)) * cos(radians(gmLatitud)) * cos(radians(gmLongitud) - radians($morningCenterLongitude)) + sin(radians($morningCenterLatitude)) * sin(radians(gmLatitud)))) ASC")
@@ -249,11 +248,11 @@ class PlanController extends Controller
         $restaurants = Restaurant::where('nombreProvincia', $province)
             ->where(function ($query) use ($tripType) {
                 if ($tripType == 'cultura') {
-                    $query->whereIn('nombre_subtipo_recurso', ['Restaurante', 'Bodegas de Vino']);
+                    $query->whereIn('nombreSubtipoRecurso', ['Restaurante', 'Bodegas de Vino']);
                 } elseif ($tripType == 'aventura') {
-                    $query->whereIn('nombre_subtipo_recurso', ['Sidrería', 'Asador']);
+                    $query->whereIn('nombreSubtipoRecurso', ['Sidrería', 'Asador']);
                 } elseif ($tripType == 'familiar') {
-                    $query->whereIn('nombre_subtipo_recurso', ['Pastelerías / Confiterías', 'Restaurante']);
+                    $query->whereIn('nombreSubtipoRecurso', ['Pastelerías / Confiterías', 'Restaurante']);
                 }
             })
             ->orderByRaw("(6371 * acos(cos(radians($morningCenterLatitude)) * cos(radians(gmLatitud)) * cos(radians(gmLongitud) - radians($morningCenterLongitude)) + sin(radians($morningCenterLatitude)) * sin(radians(gmLatitud)))) ASC")
@@ -266,7 +265,9 @@ class PlanController extends Controller
                 'id' => $place->id,
                 'type' => get_class($place),
                 'name' => $place->nombre,
-                'description' => $place->descripcion
+                'province' => $place->nombreProvincia,
+                'latitude' => $place->gmLatitud,
+                'longitude' => $place->gmLongitud
             ];
         });
 
@@ -275,7 +276,9 @@ class PlanController extends Controller
                 'id' => $accommodation->id,
                 'type' => get_class($accommodation),
                 'name' => $accommodation->nombre,
-                'description' => $accommodation->descripcion
+                'province' => $accommodation->nombreProvincia,
+                'latitude' => $accommodation->gmLatitud,
+                'longitude' => $accommodation->gmLongitud
             ];
         });
 
@@ -284,20 +287,22 @@ class PlanController extends Controller
                 'id' => $restaurant->id,
                 'type' => get_class($restaurant),
                 'name' => $restaurant->nombre,
-                'description' => $restaurant->descripcion
+                'province' => $restaurant->nombreProvincia,
+                'latitude' => $restaurant->gmLatitud,
+                'longitude' => $restaurant->gmLongitud
             ];
         });
 
         // Crear el prompt para OpenAI
         $prompt = 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-           Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
+       Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
 
     Devuelve la respuesta en formato JSON con la estructura:
     [
         {
             "indice": número del paso,
             "dia": número del día,
-            "indicaciones": "descripción del paso",
+            "indicaciones": "descripción detallada del paso",
             "planables_id": id del recurso utilizado,
             "planables_type": "tipo del recurso utilizado"
         },
@@ -308,6 +313,8 @@ class PlanController extends Controller
     Lugares de interés: ' . json_encode($placesForApi->toArray()) . ',
     Alojamientos: ' . json_encode($accommodationsForApi->toArray()) . ',
     Restaurantes: ' . json_encode($restaurantsForApi->toArray()) . '.';
+
+        dd($prompt);
 
         $openAiApiKey = env('OPENAI_API_KEY');
         $response = Http::withHeaders([
@@ -334,6 +341,8 @@ class PlanController extends Controller
             ];
 
             Cache::put($cacheKey, $tempPlan, 60 * 60 * 24);
+
+            // TODO Hacer que devuelva un PlanResource
 
             return response()->json($tempPlan, Response::HTTP_OK);
         } else {
