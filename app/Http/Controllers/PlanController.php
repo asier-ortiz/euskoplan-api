@@ -183,6 +183,7 @@ class PlanController extends Controller
 
         $cacheKey = 'itinerary_' . md5($province . $month . $year . $days . $tripType);
 
+        // TODO No devolver elementos cacheados si la solicitud la hace el mismo usuario con los mismos parámetros
 //        if (Cache::has($cacheKey)) {
 //            return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
 //        }
@@ -277,38 +278,65 @@ class PlanController extends Controller
         $filteredPlaces = collect();
 
         if ($tripType == 'cultura') {
-            $filteredPlaces = Cultural::where('nombreProvincia', $province)->get();
-            $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->get());
-            $filteredPlaces = $filteredPlaces->merge(Locality::where('nombreProvincia', $province)->get());
-            $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
+            // Prioridad a eventos
+            $events = Event::where('nombreProvincia', $province)
                 ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
                 ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Conciertos', 'Danza y Teatro', 'Exposiciones',
                     'Festivales', 'Fiestas y Tradiciones', 'Visitas y rutas guiadas'
-                ])->get());
+                ])->get();
+
+            // Resto de lugares
+            $culturalPlaces = Cultural::where('nombreProvincia', $province)->get();
+            $museums = Museum::where('nombreProvincia', $province)->get();
+            $localities = Locality::where('nombreProvincia', $province)->get();
+
+            // Ponderación: duplicar los eventos para darles mayor prioridad
+            $events = $events->merge($events);
+
+            // Mezclar los eventos con el resto, manteniendo prioridad
+            $filteredPlaces = $filteredPlaces->merge($events)
+                ->merge($culturalPlaces)
+                ->merge($museums)
+                ->merge($localities);
 
         } elseif ($tripType == 'aventura') {
-            $filteredPlaces = Natural::where('nombreProvincia', $province)->get();
-            $filteredPlaces = $filteredPlaces->merge(Cave::where('nombreProvincia', $province)->get());
-            $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
+            $events = Event::where('nombreProvincia', $province)
                 ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
                 ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Deportes', 'Visitas y rutas guiadas', 'Festivales', 'Otros'
-                ])->get());
+                ])->get();
+
+            $naturalPlaces = Natural::where('nombreProvincia', $province)->get();
+            $caves = Cave::where('nombreProvincia', $province)->get();
+
+            $events = $events->merge($events);
+
+            $filteredPlaces = $filteredPlaces->merge($events)
+                ->merge($naturalPlaces)
+                ->merge($caves);
 
         } elseif ($tripType == 'familiar') {
-            $filteredPlaces = Fair::where('nombreProvincia', $province)->get();
-            $filteredPlaces = $filteredPlaces->merge(Natural::where('nombreProvincia', $province)->get());
-            $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->get());
-            $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
+            $events = Event::where('nombreProvincia', $province)
                 ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
                 ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Actividades familiares', 'Eventos gastronómicos',
                     'Fiestas y Tradiciones', 'Festivales'
-                ])->get());
+                ])->get();
+
+            $fairs = Fair::where('nombreProvincia', $province)->get();
+            $naturalPlaces = Natural::where('nombreProvincia', $province)->get();
+            $museums = Museum::where('nombreProvincia', $province)->get();
+
+            $events = $events->merge($events);
+
+            $filteredPlaces = $filteredPlaces->merge($events)
+                ->merge($fairs)
+                ->merge($naturalPlaces)
+                ->merge($museums);
         }
 
         // Distribuir actividades en bloques de mañana, tarde y noche
