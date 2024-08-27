@@ -22,6 +22,7 @@ use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
@@ -182,9 +183,9 @@ class PlanController extends Controller
 
         $cacheKey = 'itinerary_' . md5($province . $month . $year . $days . $tripType);
 
-        if (Cache::has($cacheKey)) {
-            return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
-        }
+//        if (Cache::has($cacheKey)) {
+//            return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
+//        }
 
         $data = $this->prepareItineraryData($province, $month, $year, $days, $tripType);
 
@@ -199,6 +200,10 @@ class PlanController extends Controller
             Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
 
             Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
+
+            "title": Título corto del itinerario,
+            "description": Descripción general del itinerario completo en un párrafo corto,
+            "steps":
             [
                 {
                     "indice": número del paso,
@@ -230,30 +235,30 @@ class PlanController extends Controller
         if ($response->successful()) {
             $itinerary = $response->json()['choices'][0]['message']['content'];
 
-            // Intentar limpiar el contenido JSON y forzar a que sea un array.
+            // Intentar limpiar el contenido JSON
             $cleanedItinerary = trim($itinerary);
             $cleanedItinerary = preg_replace('/```json/', '', $cleanedItinerary); // Eliminar ```json
             $cleanedItinerary = preg_replace('/```/', '', $cleanedItinerary); // Eliminar ```
 
-            // Decodificar el JSON dentro del campo description
-            $steps = json_decode($cleanedItinerary, true);
+            // Decodificar el JSON
+            $decodedResponse = json_decode($cleanedItinerary, true);
 
-            // Verificar si steps está en null o no se ha podido decodificar correctamente
-            if ($steps === null || !is_array($steps) || !isset($steps[0]['indice'])) {
+            // Verificar si el JSON decodificado tiene la estructura esperada
+            if ($decodedResponse === null || !isset($decodedResponse['title']) || !isset($decodedResponse['description']) || !isset($decodedResponse['steps'])) {
                 return response()->json([
                     'error' => 'El JSON decodificado no tiene la estructura esperada.',
-                    'decoded_response' => $steps,
+                    'decoded_response' => $decodedResponse,
                     'raw_response' => $cleanedItinerary
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             $tempPlan = [
                 'language' => 'es',
-                'title' => 'Itinerario sugerido para ' . $province,
-                'description' => 'Itinerario de ' . $days . ' días en ' . $province,
+                'title' => $decodedResponse['title'],
+                'description' => $decodedResponse['description'],
                 'public' => false,
                 'user_id' => $request->user()->id,
-                'steps' => $steps,
+                'steps' => $decodedResponse['steps'],
             ];
 
             Cache::put($cacheKey, $tempPlan, 60 * 60 * 24);
@@ -276,8 +281,8 @@ class PlanController extends Controller
             $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Locality::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereMonth('fechaInicio', '=', $month)
-                ->whereYear('fechaInicio', '=', $year)
+                ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
+                ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Conciertos', 'Danza y Teatro', 'Exposiciones',
                     'Festivales', 'Fiestas y Tradiciones', 'Visitas y rutas guiadas'
@@ -287,8 +292,8 @@ class PlanController extends Controller
             $filteredPlaces = Natural::where('nombreProvincia', $province)->get();
             $filteredPlaces = $filteredPlaces->merge(Cave::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereMonth('fechaInicio', '=', $month)
-                ->whereYear('fechaInicio', '=', $year)
+                ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
+                ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Deportes', 'Visitas y rutas guiadas', 'Festivales', 'Otros'
                 ])->get());
@@ -298,8 +303,8 @@ class PlanController extends Controller
             $filteredPlaces = $filteredPlaces->merge(Natural::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Museum::where('nombreProvincia', $province)->get());
             $filteredPlaces = $filteredPlaces->merge(Event::where('nombreProvincia', $province)
-                ->whereMonth('fechaInicio', '=', $month)
-                ->whereYear('fechaInicio', '=', $year)
+                ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
+                ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Actividades familiares', 'Eventos gastronómicos',
                     'Fiestas y Tradiciones', 'Festivales'
