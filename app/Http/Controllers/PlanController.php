@@ -170,7 +170,7 @@ class PlanController extends Controller
         return $response->json();
     }
 
-    public function suggestItinerary(PlanSuggestRequest $request): \Illuminate\Http\Response|JsonResponse|Application|ResponseFactory
+    public function suggestItinerary(PlanSuggestRequest $request): JsonResponse
     {
         $validatedData = $request->validated();
 
@@ -186,6 +186,89 @@ class PlanController extends Controller
             return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
         }
 
+        $data = $this->prepareItineraryData($province, $month, $year, $days, $tripType);
+
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'You are a helpful assistant that generates detailed itineraries based on provided data.'
+            ],
+            [
+                'role' => 'user',
+                'content' => 'Genera un itinerario de ' . $days . ' días basado en estos datos.
+            Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
+
+            Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
+            [
+                {
+                    "indice": número del paso,
+                    "dia": número del día,
+                    "indicaciones": "descripción detallada del paso",
+                    "planables_id": id del recurso utilizado,
+                    "planables_type": "tipo del recurso utilizado"
+                },
+                ...
+            ]
+
+            Aquí tienes los recursos disponibles:
+            Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
+            Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
+            Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
+            ]
+        ];
+
+        $openAiApiKey = env('OPENAI_API_KEY');
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $openAiApiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.openai.com/v1/chat/completions', [
+            'model' => 'gpt-4o-mini',
+            'messages' => $messages,
+            'max_tokens' => 1500,
+        ]);
+
+        if ($response->successful()) {
+            $itinerary = $response->json()['choices'][0]['message']['content'];
+
+            // Intentar limpiar el contenido JSON y forzar a que sea un array.
+            $cleanedItinerary = trim($itinerary);
+            $cleanedItinerary = preg_replace('/```json/', '', $cleanedItinerary); // Eliminar ```json
+            $cleanedItinerary = preg_replace('/```/', '', $cleanedItinerary); // Eliminar ```
+
+            // Decodificar el JSON dentro del campo description
+            $steps = json_decode($cleanedItinerary, true);
+
+            // Verificar si steps está en null o no se ha podido decodificar correctamente
+            if ($steps === null || !is_array($steps) || !isset($steps[0]['indice'])) {
+                return response()->json([
+                    'error' => 'El JSON decodificado no tiene la estructura esperada.',
+                    'decoded_response' => $steps,
+                    'raw_response' => $cleanedItinerary
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $tempPlan = [
+                'language' => 'es',
+                'title' => 'Itinerario sugerido para ' . $province,
+                'description' => 'Itinerario de ' . $days . ' días en ' . $province,
+                'public' => false,
+                'user_id' => $request->user()->id,
+                'steps' => $steps,
+            ];
+
+            Cache::put($cacheKey, $tempPlan, 60 * 60 * 24);
+            return response()->json($tempPlan, Response::HTTP_OK);
+
+        } else {
+            return response()->json([
+                'error' => 'Error al comunicarse con el servicio de generación de itinerarios.',
+                'api_response' => $response->json()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function prepareItineraryData($province, $month, $year, $days, $tripType): array
+    {
         $filteredPlaces = collect();
 
         if ($tripType == 'cultura') {
@@ -199,6 +282,7 @@ class PlanController extends Controller
                     'Conciertos', 'Danza y Teatro', 'Exposiciones',
                     'Festivales', 'Fiestas y Tradiciones', 'Visitas y rutas guiadas'
                 ])->get());
+
         } elseif ($tripType == 'aventura') {
             $filteredPlaces = Natural::where('nombreProvincia', $province)->get();
             $filteredPlaces = $filteredPlaces->merge(Cave::where('nombreProvincia', $province)->get());
@@ -208,6 +292,7 @@ class PlanController extends Controller
                 ->whereIn('nombreSubtipoRecurso', [
                     'Deportes', 'Visitas y rutas guiadas', 'Festivales', 'Otros'
                 ])->get());
+
         } elseif ($tripType == 'familiar') {
             $filteredPlaces = Fair::where('nombreProvincia', $province)->get();
             $filteredPlaces = $filteredPlaces->merge(Natural::where('nombreProvincia', $province)->get());
@@ -259,95 +344,38 @@ class PlanController extends Controller
             ->take(5)
             ->get();
 
-        // Preparar los recursos para la API
-        $placesForApi = $morningActivities->merge($afternoonActivities)->merge($nightActivities)->map(function ($place) {
-            return [
-                'id' => $place->id,
-                'type' => get_class($place),
-                'name' => $place->nombre,
-                'province' => $place->nombreProvincia,
-                'latitude' => $place->gmLatitud,
-                'longitude' => $place->gmLongitud
-            ];
-        });
-
-        $accommodationsForApi = $accommodations->map(function ($accommodation) {
-            return [
-                'id' => $accommodation->id,
-                'type' => get_class($accommodation),
-                'name' => $accommodation->nombre,
-                'province' => $accommodation->nombreProvincia,
-                'latitude' => $accommodation->gmLatitud,
-                'longitude' => $accommodation->gmLongitud
-            ];
-        });
-
-        $restaurantsForApi = $restaurants->map(function ($restaurant) {
-            return [
-                'id' => $restaurant->id,
-                'type' => get_class($restaurant),
-                'name' => $restaurant->nombre,
-                'province' => $restaurant->nombreProvincia,
-                'latitude' => $restaurant->gmLatitud,
-                'longitude' => $restaurant->gmLongitud
-            ];
-        });
-
-        // Crear el prompt para OpenAI
-        $prompt = 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-       Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
-
-    Devuelve la respuesta en formato JSON con la estructura:
-    [
-        {
-            "indice": número del paso,
-            "dia": número del día,
-            "indicaciones": "descripción detallada del paso",
-            "planables_id": id del recurso utilizado,
-            "planables_type": "tipo del recurso utilizado"
-        },
-        ...
-    ]
-
-    Aquí tienes los recursos disponibles:
-    Lugares de interés: ' . json_encode($placesForApi->toArray()) . ',
-    Alojamientos: ' . json_encode($accommodationsForApi->toArray()) . ',
-    Restaurantes: ' . json_encode($restaurantsForApi->toArray()) . '.';
-
-        dd($prompt);
-
-        $openAiApiKey = env('OPENAI_API_KEY');
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $openAiApiKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://api.openai.com/v1/completions', [
-            'model' => 'text-davinci-003',
-            'prompt' => $prompt,
-            'max_tokens' => 1500,
-        ]);
-
-        if ($response->successful()) {
-            $itinerary = $response->json()['choices'][0]['text'];
-
-            $steps = json_decode($itinerary, true);
-
-            $tempPlan = [
-                'language' => 'es',
-                'title' => 'Itinerario sugerido para ' . $province,
-                'description' => $itinerary,
-                'public' => false,
-                'user_id' => $request->user()->id,
-                'steps' => $steps,
-            ];
-
-            Cache::put($cacheKey, $tempPlan, 60 * 60 * 24);
-
-            // TODO Hacer que devuelva un PlanResource
-
-            return response()->json($tempPlan, Response::HTTP_OK);
-        } else {
-            return response(['error' => 'Error al generar el itinerario'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return [
+            'places' => $morningActivities->merge($afternoonActivities)->merge($nightActivities)->map(function ($place) {
+                return [
+                    'id' => $place->id,
+                    'type' => get_class($place),
+                    'name' => $place->nombre,
+                    'province' => $place->nombreProvincia,
+                    'latitude' => $place->gmLatitud,
+                    'longitude' => $place->gmLongitud
+                ];
+            }),
+            'accommodations' => $accommodations->map(function ($accommodation) {
+                return [
+                    'id' => $accommodation->id,
+                    'type' => get_class($accommodation),
+                    'name' => $accommodation->nombre,
+                    'province' => $accommodation->nombreProvincia,
+                    'latitude' => $accommodation->gmLatitud,
+                    'longitude' => $accommodation->gmLongitud
+                ];
+            }),
+            'restaurants' => $restaurants->map(function ($restaurant) {
+                return [
+                    'id' => $restaurant->id,
+                    'type' => get_class($restaurant),
+                    'name' => $restaurant->nombre,
+                    'province' => $restaurant->nombreProvincia,
+                    'latitude' => $restaurant->gmLatitud,
+                    'longitude' => $restaurant->gmLongitud
+                ];
+            })
+        ];
     }
 
 }
