@@ -230,7 +230,7 @@ class PlanController extends Controller
         ])->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-4o-mini',
             'messages' => $messages,
-            'max_tokens' => 1500,
+            'max_tokens' => 2_000,
         ]);
 
         if ($response->successful()) {
@@ -383,6 +383,7 @@ class PlanController extends Controller
                     'id' => $place->id,
                     'type' => get_class($place),
                     'name' => $place->nombre,
+                    'description' => $place->descripcion,
                     'province' => $place->nombreProvincia,
                     'latitude' => $place->gmLatitud,
                     'longitude' => $place->gmLongitud
@@ -393,6 +394,7 @@ class PlanController extends Controller
                     'id' => $accommodation->id,
                     'type' => get_class($accommodation),
                     'name' => $accommodation->nombre,
+                    'description' => $accommodation->descripcion,
                     'province' => $accommodation->nombreProvincia,
                     'latitude' => $accommodation->gmLatitud,
                     'longitude' => $accommodation->gmLongitud
@@ -403,6 +405,7 @@ class PlanController extends Controller
                     'id' => $restaurant->id,
                     'type' => get_class($restaurant),
                     'name' => $restaurant->nombre,
+                    'description' => $restaurant->descripcion,
                     'province' => $restaurant->nombreProvincia,
                     'latitude' => $restaurant->gmLatitud,
                     'longitude' => $restaurant->gmLongitud
