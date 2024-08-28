@@ -29,14 +29,32 @@ class CollectionsCron extends Command
         info("Starting database collections update Cron Job at " . now());
 
         $this->dataManager->fetchResource('accommodations', 'es');
+        $this->dataManager->fetchResource('accommodations', 'en');
+
         $this->dataManager->fetchResource('caves', 'es');
+        $this->dataManager->fetchResource('caves', 'en');
+
         $this->dataManager->fetchResource('culturals', 'es');
+        $this->dataManager->fetchResource('culturals', 'en');
+
         $this->dataManager->fetchResource('events', 'es');
+        $this->dataManager->fetchResource('events', 'en');
+
         $this->dataManager->fetchResource('fairs', 'es');
+        $this->dataManager->fetchResource('fairs', 'en');
+
         $this->dataManager->fetchResource('museums', 'es');
+        $this->dataManager->fetchResource('museums', 'en');
+
         $this->dataManager->fetchResource('naturals', 'es');
+        $this->dataManager->fetchResource('naturals', 'en');
+
         $this->dataManager->fetchResource('restaurants', 'es');
+        $this->dataManager->fetchResource('restaurants', 'en');
+
         $this->dataManager->fetchResource('localities', 'es');
+        $this->dataManager->fetchResource('localities', 'en');
+
         $this->databaseSeeder->run();
 
         info("Finishing database collections update Cron Job at " . now());
