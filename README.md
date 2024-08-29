@@ -103,7 +103,13 @@ docker compose up -d
 docker compose exec php composer install
 ```
 
-> :warning: This step is only necessary the first time.
+- If you see a warning about the lock file being out of date, run the following command to synchronize it:
+
+```shell
+docker compose exec php composer update
+```
+
+> :warning: Running `composer update` will update the lock file to match the composer.json, ensuring dependencies are up to date.
 
 - From the root directory of the project, run the following command:
 
@@ -129,10 +135,28 @@ docker compose exec php php artisan db:seed
 
 ## 6. Access the Services
 
-- [phpMyAdmin](http://localhost:8081) (credentials --> db / user / password)
-- [RedisInsight](http://localhost:5540) (Host: `api-redis`, Port: `6379`, Username: leave blank, Password: `password`)
-- [Mailhog](http://localhost:8025/)
-- [Postman](https://www.postman.com/): Download the following [file](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) and import it to test the endpoints
+Once the Docker containers are running, you can access various services provided by the application. Below are the details on how to access each service:
+
+- **phpMyAdmin**: A web interface to manage your MySQL database.
+    - URL: [http://localhost:8081](http://localhost:8081)
+    - Connection Details:
+        - **Server**: `db`
+        - **Username**: `user`
+        - **Password**: `password`
+
+- **RedisInsight**: A web tool for managing and monitoring Redis databases.
+    - URL: [http://localhost:5540](http://localhost:5540)
+    - Connection Details:
+        - **Host**: `redis`
+        - **Port**: `6379`
+        - **Username**: (leave blank)
+        - **Password**: `password`
+
+- **MailHog**: A web interface to view emails sent by the application (for local development only).
+    - URL: [http://localhost:8025](http://localhost:8025)
+
+- **Postman**: Use Postman to test the API endpoints. You can download and import a pre-configured Postman file:
+    - Download the file [here](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) and import it into Postman.
 
 ## 7. Shell Access to the Application Container
 
