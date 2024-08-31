@@ -7,6 +7,7 @@ use App\Http\Resources\LocalityResource;
 use App\Models\Locality;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class LocalityController extends Controller
 {
@@ -32,6 +33,20 @@ class LocalityController extends Controller
                 })
                 ->when(request('descripcion'), function (Builder $query) {
                     $query->where('descripcion', 'like', '%' . request('descripcion') . '%');
+                })
+                ->when(request('longitud') && request('latitud') && request('distancia'), function (Builder $query) {
+                    $haversine = "(6371 * acos(cos(radians(?))
+                                * cos(radians(gmLatitud))
+                                * cos(radians(gmLongitud) - radians(?))
+                                + sin(radians(?))
+                                * sin(radians(gmLatitud))))";
+
+                    $query->whereRaw("$haversine < ?", [
+                        request('latitud'),
+                        request('longitud'),
+                        request('latitud'),
+                        request('distancia')
+                    ]);
                 })
                 ->when(request('aleatorio') === 'si', function (Builder $query) {
                     $query->inRandomOrder();
