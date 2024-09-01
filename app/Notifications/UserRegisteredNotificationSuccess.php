@@ -52,7 +52,7 @@ class UserRegisteredNotificationSuccess extends Notification
             ->greeting('¡Hola ' . $this->username . '!')
             ->line('Gracias por registrarte en nuestra aplicación. Tu cuenta ha sido creada exitosamente.')
             ->action('Visítanos', url($url))
-            ->line('¡Esperamos que disfrutes usando nuestra aplicación!');
+            ->salutation('¡Esperamos que disfrutes usando nuestra aplicación!');
     }
 
     /**

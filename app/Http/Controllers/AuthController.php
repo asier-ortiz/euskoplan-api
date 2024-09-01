@@ -9,7 +9,6 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Notifications\AccountDeletedNotificationSuccess;
 use App\Notifications\PasswordUpdatedNotificationSuccess;
-use App\Notifications\UserRegisteredNotificationSuccess;
 use Cookie;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -31,7 +30,6 @@ class AuthController extends Controller
             'password' => Hash::make($validatedData['password']),
         ]);
 
-        $user->notify(new UserRegisteredNotificationSuccess($user->username));
         return response(new UserResource($user), Response::HTTP_CREATED);
     }
 

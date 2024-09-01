@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Models\EmailVerify;
 use App\Models\User;
 use App\Notifications\EmailVerifyNotificationRequest;
+use App\Notifications\UserRegisteredNotificationSuccess;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
@@ -73,6 +74,8 @@ class EmailVerifyController extends Controller
 
         Auth::login($user);
         $jwt = $user->createToken('token')->plainTextToken;
+
+        $user->notify(new UserRegisteredNotificationSuccess($user->username));
 
         return response([
             'user' => new UserResource($user),
