@@ -24,7 +24,10 @@ class PasswordResetNotificationRequest extends Notification
 
     public function toMail($notifiable)
     {
-        $url = url('http://localhost:4200/auth/password-reset?token=' . $this->token);
+        $frontendUrl = env('FRONTEND_URL');
+        $frontendPort = env('FRONTEND_PORT');
+
+        $url = $frontendUrl . ':' . $frontendPort . '/auth/password-reset?token=' . $this->token;
 
         return (new MailMessage)
             ->subject('Solicitud de reinicio de contraseña')

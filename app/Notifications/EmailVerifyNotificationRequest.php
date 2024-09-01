@@ -26,7 +26,10 @@ class EmailVerifyNotificationRequest extends Notification
 
     public function toMail($notifiable)
     {
-        $url = url('http://localhost:4200/auth/email-verify?token=' . $this->token);
+        $frontendUrl = env('FRONTEND_URL');
+        $frontendPort = env('FRONTEND_PORT');
+
+        $url = $frontendUrl . ':' . $frontendPort . '/auth/email-verify?token=' . $this->token;
 
         return (new MailMessage)
             ->subject('Verificación de correo electrónico')
