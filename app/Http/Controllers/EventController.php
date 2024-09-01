@@ -15,7 +15,7 @@ class EventController extends Controller
 
     public function show($code, $language): EventResource
     {
-        $event = Event::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $event = Event::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new EventResource($event);
     }
 

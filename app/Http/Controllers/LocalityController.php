@@ -14,7 +14,7 @@ class LocalityController extends Controller
 
     public function show($code, $language): LocalityResource
     {
-        $locality = Locality::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $locality = Locality::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new LocalityResource($locality);
     }
 

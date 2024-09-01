@@ -15,6 +15,9 @@ class CulturalCompactResource extends JsonResource
             'id' => $this->id,
             'coleccion' => 'cultural',
 
+            // Seo
+            'slug' => $this->getRouteKey(),
+
             // Datos generales
             'codigo' => $this->codigo,
             'tipo_recurso' => $this->tipoRecurso,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Slug;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -56,11 +57,16 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Locality whereTipoRecurso($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Locality whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Locality whereUrlFichaPortal($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Plan> $plans
+ * @property-read int|null $plans_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
+ * @property-read int|null $users_count
  * @mixin \Eloquent
  */
 class Locality extends Model
 {
     use HasFactory;
+    use Slug;
 
     protected $table = 'localities';
 

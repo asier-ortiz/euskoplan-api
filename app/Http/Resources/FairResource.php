@@ -20,6 +20,9 @@ class FairResource extends JsonResource
             'id' => $this->id,
             'coleccion' => 'fair',
 
+            // Seo
+            'slug' => $this->getRouteKey(),
+
             // Datos generales
             'codigo' => $this->codigo,
             'tipo_recurso' => $this->tipoRecurso,

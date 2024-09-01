@@ -21,6 +21,9 @@ class EventResource extends JsonResource
             'id' => $this->id,
             'coleccion' => 'event',
 
+            // Seo
+            'slug' => $this->getRouteKey(),
+
             // Datos generales
             'codigo' => $this->codigo,
             'tipo_recurso' => $this->tipoRecurso,

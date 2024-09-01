@@ -15,7 +15,7 @@ class CaveController extends Controller
 
     public function show($code, $language): CaveResource
     {
-        $cave = Cave::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $cave = Cave::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new CaveResource($cave);
     }
 

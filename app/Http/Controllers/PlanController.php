@@ -96,7 +96,7 @@ class PlanController extends Controller
 
     public function show($id): \Illuminate\Http\Response|PlanResource|Application|ResponseFactory
     {
-        $plan = Plan::find($id);
+        $plan = Plan::findOrFail($id);
         if (!$plan || !Gate::allows('read-plan', $plan)) {
             return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }

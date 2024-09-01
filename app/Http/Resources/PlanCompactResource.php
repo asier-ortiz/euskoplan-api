@@ -87,6 +87,7 @@ class PlanCompactResource extends JsonResource
             'idioma' => $this->idioma,
             'titulo' => $this->titulo,
             'descripcion' => $this->descripcion,
+            'slug' => $this->getRouteKey(),
             'votos' => $this->votos,
             'publico' => $this->publico,
             'pasos' => $steps

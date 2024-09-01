@@ -20,6 +20,9 @@ class LocalityResource extends JsonResource
             'id' => $this->id,
             'coleccion' => 'locality',
 
+            // Seo
+            'slug' => $this->getRouteKey(),
+
             // Datos generales
             'codigo' => $this->codigo,
             'tipo_recurso' => $this->tipoRecurso,

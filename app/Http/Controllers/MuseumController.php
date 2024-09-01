@@ -15,7 +15,7 @@ class MuseumController extends Controller
 
     public function show($code, $language): MuseumResource
     {
-        $museum = Museum::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $museum = Museum::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new MuseumResource($museum);
     }
 

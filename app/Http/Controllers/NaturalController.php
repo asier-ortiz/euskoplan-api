@@ -14,7 +14,7 @@ class NaturalController extends Controller
 
     public function show($code, $language): NaturalResource
     {
-        $natural = Natural::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $natural = Natural::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new NaturalResource($natural);
     }
 

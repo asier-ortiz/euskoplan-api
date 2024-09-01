@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Slug;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -85,6 +86,7 @@ use Illuminate\Support\Carbon;
 class Restaurant extends Model
 {
     use HasFactory;
+    use Slug;
 
     protected $table = 'restaurants';
 

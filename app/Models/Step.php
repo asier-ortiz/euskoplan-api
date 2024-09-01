@@ -28,6 +28,9 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Step wherePlanablesId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Step wherePlanablesType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Step whereUpdatedAt($value)
+ * @property int $dia
+ * @method static \Database\Factories\StepFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder|Step whereDia($value)
  * @mixin \Eloquent
  */
 class Step extends Model

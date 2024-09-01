@@ -15,6 +15,9 @@ class CaveCompactResource extends JsonResource
             'id' => $this->id,
             'coleccion' => 'cave',
 
+            // Seo
+            'slug' => $this->getRouteKey(),
+
             // Datos generales
             'codigo' => $this->codigo,
             'tipo_recurso' => $this->tipoRecurso,

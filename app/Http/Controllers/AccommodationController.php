@@ -15,7 +15,7 @@ class AccommodationController extends Controller
 
     public function show($code, $language): AccommodationResource
     {
-        $accommodation = Accommodation::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $accommodation = Accommodation::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new AccommodationResource($accommodation);
     }
 

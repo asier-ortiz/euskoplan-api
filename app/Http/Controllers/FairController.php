@@ -14,7 +14,7 @@ class FairController extends Controller
 
     public function show($code, $language): FairResource
     {
-        $fair = Fair::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $fair = Fair::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new FairResource($fair);
     }
 

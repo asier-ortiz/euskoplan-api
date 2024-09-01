@@ -15,7 +15,7 @@ class RestaurantController extends Controller
 
     public function show($code, $language): RestaurantResource
     {
-        $restaurant = Restaurant::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $restaurant = Restaurant::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new RestaurantResource($restaurant);
     }
 

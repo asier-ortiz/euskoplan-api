@@ -15,6 +15,9 @@ class AccommodationCompactResource extends JsonResource
             'id' => $this->id,
             'coleccion' => 'accommodation',
 
+            // Seo
+            'slug' => $this->getRouteKey(),
+
             // Datos generales
             'codigo' => $this->codigo,
             'tipo_recurso' => $this->tipoRecurso,

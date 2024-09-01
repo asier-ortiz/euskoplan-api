@@ -15,7 +15,7 @@ class CulturalController extends Controller
 
     public function show($code, $language): CulturalResource
     {
-        $cultural = Cultural::where('codigo', '=', $code)->where('idioma', '=', $language)->first();
+        $cultural = Cultural::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
         return new CulturalResource($cultural);
     }
 
