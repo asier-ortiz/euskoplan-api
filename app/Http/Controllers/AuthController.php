@@ -7,6 +7,9 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Notifications\AccountDeletedNotificationSuccess;
+use App\Notifications\PasswordUpdatedNotificationSuccess;
+use App\Notifications\UserRegisteredNotificationSuccess;
 use Cookie;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -28,6 +31,7 @@ class AuthController extends Controller
             'password' => Hash::make($validatedData['password']),
         ]);
 
+        $user->notify(new UserRegisteredNotificationSuccess($user->username));
         return response(new UserResource($user), Response::HTTP_CREATED);
     }
 
@@ -68,12 +72,14 @@ class AuthController extends Controller
     {
         $user = request()->user();
         $user->update(['password' => Hash::make($request->input('password'))]);
+        $user->notify(new PasswordUpdatedNotificationSuccess($user->username));
         return response(new UserResource($user), Response::HTTP_ACCEPTED);
     }
 
     public function destroy(): \Illuminate\Http\Response|Application|ResponseFactory
     {
         $user = request()->user();
+        $user->notify(new AccountDeletedNotificationSuccess($user->username));
         User::destroy($user->id);
         return response(null, Response::HTTP_NO_CONTENT);
     }
