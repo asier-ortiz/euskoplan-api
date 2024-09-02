@@ -181,13 +181,26 @@ class PlanController extends Controller
         $days = $validatedData['dias'];
         $tripType = $validatedData['tipo_viaje'];
 
+        $userId = $request->user()->id;
         $cacheKey = 'itinerary_' . md5($province . $month . $year . $days . $tripType);
+        $userViewedKey = 'user_' . $userId . '_viewed_' . $cacheKey;
 
-        // TODO No devolver elementos cacheados si la solicitud la hace el mismo usuario con los mismos parámetros
-//        if (Cache::has($cacheKey)) {
-//            return response()->json(Cache::get($cacheKey), Response::HTTP_OK);
-//        }
+        // Obtener itinerarios cacheados y los itinerarios que el usuario ya ha visto
+        $cachedItineraries = Cache::get($cacheKey, []);
+        $userViewedItineraries = Cache::get($userViewedKey, []);
 
+        // Filtrar los itinerarios no vistos por el usuario
+        $unseenItineraries = array_diff_key($cachedItineraries, array_flip($userViewedItineraries));
+
+        if (!empty($unseenItineraries)) {
+            // Devolver un itinerario no visto por el usuario
+            $itinerary = reset($unseenItineraries);
+            $userViewedItineraries[] = $itinerary['hash']; // Guardar que este itinerario ya fue visto
+            Cache::put($userViewedKey, $userViewedItineraries, 60 * 60 * 24);
+            return response()->json($itinerary['data'], Response::HTTP_OK);
+        }
+
+        // Si todos los itinerarios cacheados ya fueron vistos o no hay itinerarios en caché
         $data = $this->prepareItineraryData($province, $month, $year, $days, $tripType);
 
         $messages = [
@@ -198,28 +211,28 @@ class PlanController extends Controller
             [
                 'role' => 'user',
                 'content' => 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-            Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
+        Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
 
-            Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
+        Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
 
-            "title": Título corto del itinerario,
-            "description": Descripción general del itinerario completo en un párrafo corto,
-            "steps":
-            [
-                {
-                    "indice": número del paso,
-                    "dia": número del día,
-                    "indicaciones": "descripción detallada del paso",
-                    "planables_id": id del recurso utilizado,
-                    "planables_type": "tipo del recurso utilizado"
-                },
-                ...
-            ]
+        "title": Título corto del itinerario,
+        "description": Descripción general del itinerario completo en un párrafo corto,
+        "steps":
+        [
+            {
+                "indice": número del paso,
+                "dia": número del día,
+                "indicaciones": "descripción detallada del paso",
+                "planables_id": id del recurso utilizado,
+                "planables_type": "tipo del recurso utilizado"
+            },
+            ...
+        ]
 
-            Aquí tienes los recursos disponibles:
-            Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
-            Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
-            Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
+        Aquí tienes los recursos disponibles:
+        Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
+        Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
+        Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
             ]
         ];
 
@@ -234,17 +247,15 @@ class PlanController extends Controller
         ]);
 
         if ($response->successful()) {
-            $itinerary = $response->json()['choices'][0]['message']['content'];
+            $itineraryContent = $response->json()['choices'][0]['message']['content'];
 
-            // Intentar limpiar el contenido JSON
-            $cleanedItinerary = trim($itinerary);
-            $cleanedItinerary = preg_replace('/```json/', '', $cleanedItinerary); // Eliminar ```json
-            $cleanedItinerary = preg_replace('/```/', '', $cleanedItinerary); // Eliminar ```
+            // Limpieza del contenido JSON
+            $cleanedItinerary = trim($itineraryContent);
+            $cleanedItinerary = preg_replace('/```json/', '', $cleanedItinerary);
+            $cleanedItinerary = preg_replace('/```/', '', $cleanedItinerary);
 
-            // Decodificar el JSON
             $decodedResponse = json_decode($cleanedItinerary, true);
 
-            // Verificar si el JSON decodificado tiene la estructura esperada
             if ($decodedResponse === null || !isset($decodedResponse['title']) || !isset($decodedResponse['description']) || !isset($decodedResponse['steps'])) {
                 return response()->json([
                     'error' => 'El JSON decodificado no tiene la estructura esperada.',
@@ -253,17 +264,28 @@ class PlanController extends Controller
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
+            $itineraryHash = md5(json_encode($decodedResponse)); // Hash del contenido del itinerario
             $tempPlan = [
-                'language' => 'es',
-                'title' => $decodedResponse['title'],
-                'description' => $decodedResponse['description'],
-                'public' => false,
-                'user_id' => $request->user()->id,
-                'steps' => $decodedResponse['steps'],
+                'hash' => $itineraryHash,
+                'data' => [
+                    'language' => 'es',
+                    'title' => $decodedResponse['title'],
+                    'description' => $decodedResponse['description'],
+                    'public' => false,
+                    'user_id' => $userId,
+                    'steps' => $decodedResponse['steps'],
+                ]
             ];
 
-            Cache::put($cacheKey, $tempPlan, 60 * 60 * 24);
-            return response()->json($tempPlan, Response::HTTP_OK);
+            // Cachear el nuevo resultado
+            $cachedItineraries[$itineraryHash] = $tempPlan;
+            Cache::put($cacheKey, $cachedItineraries, 60 * 60 * 24);
+
+            // Añadir a la lista de itinerarios vistos por el usuario
+            $userViewedItineraries[] = $itineraryHash;
+            Cache::put($userViewedKey, $userViewedItineraries, 60 * 60 * 24);
+
+            return response()->json($tempPlan['data'], Response::HTTP_OK);
 
         } else {
             return response()->json([
