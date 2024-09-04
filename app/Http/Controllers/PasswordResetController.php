@@ -12,8 +12,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
-use App\Notifications\PasswordResetNotificationRequest;
-use App\Notifications\PasswordResetNotificationSuccess;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,15 +25,15 @@ class PasswordResetController extends Controller
         $validatedData = $request->validated();
         $user = User::where('email', $validatedData['email'])->first();
 
-        if (!$user)
+        if (!$user) {
             return response(['message' => 'We cannot find a user with that email address'], Response::HTTP_NOT_FOUND);
+        }
 
-        $passwordReset = PasswordReset::updateOrCreate(
+        PasswordReset::updateOrCreate(
             ['email' => $user->email],
             ['email' => $user->email, 'token' => Str::random(40)]
         );
 
-        if ($passwordReset) $user->notify(new PasswordResetNotificationRequest($passwordReset->token));
         return response(['message' => 'We have e-mailed your password reset link'], Response::HTTP_ACCEPTED);
     }
 
@@ -63,13 +61,18 @@ class PasswordResetController extends Controller
             ['email', $validatedData['email']]
         ])->first();
 
-        if (!$passwordReset) return response(['message' => 'This password reset token is invalid'], Response::HTTP_NOT_FOUND);
+        if (!$passwordReset) {
+            return response(['message' => 'This password reset token is invalid'], Response::HTTP_NOT_FOUND);
+        }
+
         $user = User::where('email', $passwordReset->email)->first();
-        if (!$user) return response(['message' => 'We cannot find a user with that email address'], Response::HTTP_NOT_FOUND);
+        if (!$user) {
+            return response(['message' => 'We cannot find a user with that email address'], Response::HTTP_NOT_FOUND);
+        }
+
         $user->password = Hash::make($validatedData['password']);
         $user->save();
         $passwordReset->delete();
-        $user->notify(new PasswordResetNotificationSuccess());
         return response(new UserResource($user));
     }
 

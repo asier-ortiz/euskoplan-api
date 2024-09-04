@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-
 /**
  * App\Models\EmailVerify
  *
@@ -28,4 +27,11 @@ class EmailVerify extends Model
     protected $table = 'user_verification_tokens';
 
     protected $fillable = ['email', 'token'];
+
+    // Relación con el usuario
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'email', 'email');
+    }
+
 }

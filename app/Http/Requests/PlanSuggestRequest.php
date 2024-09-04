@@ -20,7 +20,7 @@ class PlanSuggestRequest extends FormRequest
             'tipo_viaje' => 'required|string|in:cultura,aventura,familiar',
             'mes' => 'required|integer|min:1|max:12', // Mes como un entero entre 1 y 12
             'año' => 'required|integer|min:' . $currentYear . '|max:' . ($currentYear + 1), // Año como un entero, entre el año actual y el siguiente
-            'idioma' => 'required|string|in:es,eu,en', // Idioma debe ser es, eu, o en
+            'idioma' => 'required|string|in:es,eu,en',
         ];
     }
 

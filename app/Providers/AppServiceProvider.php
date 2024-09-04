@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\EmailVerify;
 use App\Models\Favourite;
+use App\Models\PasswordReset;
 use App\Models\Plan;
 use App\Models\User;
+use App\Observers\EmailVerifyObserver;
+use App\Observers\PasswordResetObserver;
+use App\Observers\UserObserver;
 use Gate;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -59,5 +64,9 @@ class AppServiceProvider extends ServiceProvider
             return $user->id === $favourite->user_id;
         });
 
+        // Observers
+        User::observe(UserObserver::class);
+        EmailVerify::observe(EmailVerifyObserver::class);
+        PasswordReset::observe(PasswordResetObserver::class);
     }
 }

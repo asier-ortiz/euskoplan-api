@@ -6,6 +6,7 @@ use App\Http\Requests\SendEmailVerificationRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Resources\EmailVerifyResource;
 use App\Http\Resources\UserResource;
+use App\Jobs\SendEmailVerificationNotification;
 use App\Models\EmailVerify;
 use App\Models\User;
 use App\Notifications\EmailVerifyNotificationRequest;
@@ -25,15 +26,15 @@ class EmailVerifyController extends Controller
         $validatedData = $request->validated();
         $user = User::where('email', $validatedData['email'])->first();
 
-        if (!$user)
+        if (!$user) {
             return response(['message' => 'We cannot find a user with that email address'], Response::HTTP_NOT_FOUND);
+        }
 
-        $emailVerify = EmailVerify::updateOrCreate(
+        EmailVerify::updateOrCreate(
             ['email' => $user->email],
             ['email' => $user->email, 'token' => Str::random(40)]
         );
 
-        if ($emailVerify) $user->notify(new EmailVerifyNotificationRequest($emailVerify->token, $user->username));
         return response(['message' => 'We have e-mailed your verification link'], Response::HTTP_ACCEPTED);
     }
 
@@ -74,8 +75,6 @@ class EmailVerifyController extends Controller
 
         Auth::login($user);
         $jwt = $user->createToken('token')->plainTextToken;
-
-        $user->notify(new UserRegisteredNotificationSuccess($user->username));
 
         return response([
             'user' => new UserResource($user),

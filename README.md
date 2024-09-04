@@ -57,6 +57,7 @@ DB_DATABASE=api
 DB_USERNAME=user
 DB_PASSWORD=password
 ```
+
 - Modify Redis settings in the `.env` file
 
 ```text
@@ -183,6 +184,16 @@ docker compose exec php php artisan collections:cron
 ```
 
 > :warning: Depending on the amount of data, the update process can take some time.
+
+## 10. Queue Workers
+
+- **Queues** are used in the application to handle background jobs like sending emails. To ensure that emails and other background jobs are processed, you must run the following command to start the queue worker:
+
+```bash
+docker compose exec php php artisan queue:work
+```
+
+> :warning: This worker should be running at all times to process queued jobs like sending emails.
 
 ## Other
 
