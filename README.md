@@ -9,7 +9,7 @@ It allows users to create and manage tourism plans using various catalogs from [
 
 Users can either manually create their own itineraries or automatically generate them using AI via the OpenAI API.
 
-The information is sourced from XML files, which are parsed and automatically updated in the database using a Cron job.
+The information is sourced from XML files, which are parsed and automatically updated in the database every Monday between 00:00 and 06:00 (Europe/Madrid) using a Cron job. Additionally, you can manually trigger a database update if necessary.
 
 The API also integrates with Mapbox for route calculation and manages authentication and authorization with [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum) and [Laravel Gates](https://laravel.com/docs/10.x/authorization#gates).
 
@@ -170,20 +170,26 @@ docker compose exec php /bin/bash
 docker compose stop
 ```
 
+## 9. Database Updates
+
+#### Automatic Updates
+- The database is automatically updated via a scheduled **Cron Job**, which runs every Monday between **00:00 and 06:00 (Europe/Madrid)**. During this time, the system will fetch the latest data from [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) and update the database.
+
+#### Manual Updates
+- If you need to manually force an update (for example, during testing or debugging), you can do so by running the following command:
+
+```bash
+docker compose exec php php artisan collections:cron
+```
+
+> :warning: Depending on the amount of data, the update process can take some time.
+
 ## Other
 
 - There is a test user to access the web application with the following credentials:
     - Username: test
     - Email: test@test.com
     - Password: password
-
-- The database can be updated via a Cron job by running the following command:
-
-> :warning: It may take hours to complete.
-
-```bash
-docker compose exec php php artisan collections:cron
-```
 
 ## Screenshots
 
