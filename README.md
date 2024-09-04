@@ -134,7 +134,17 @@ docker compose exec php php artisan migrate
 docker compose exec php php artisan db:seed
 ```
 
-## 6. Access the Services
+## 6. Queue Workers
+
+- **Queues** are used in the application to handle background jobs like sending emails and processing collections. To ensure that emails and other background jobs (including collection updates) are processed, you must run the following command to start the queue worker:
+
+```bash
+docker compose exec php php artisan queue:work
+```
+
+> :warning: This worker should be running at all times to process queued jobs like sending emails and updating collections.
+
+## 7. Access the Services
 
 Once the Docker containers are running, you can access various services provided by the application. Below are the details on how to access each service:
 
@@ -159,19 +169,19 @@ Once the Docker containers are running, you can access various services provided
 - **Postman**: Use Postman to test the API endpoints. You can download and import a pre-configured Postman file:
     - Download the file [here](https://drive.google.com/file/d/1KtY4w0z94aVRbSv4h-5wdPcGCgjUzA68/view?usp=sharing) and import it into Postman.
 
-## 7. Shell Access to the Application Container
+## 8. Shell Access to the Application Container
 
 ```shell
 docker compose exec php /bin/bash
 ```
 
-## 8. Stop the Containers
+## 9. Stop the Containers
 
 ```shell
 docker compose stop
 ```
 
-## 9. Database Updates
+## 10. Database Updates
 
 #### Automatic Updates
 - The database is automatically updated via a scheduled **Cron Job**, which runs every Monday between **00:00 and 06:00 (Europe/Madrid)**. During this time, the system will fetch the latest data from [Open Data Euskadi](https://opendata.euskadi.eus/inicio/) and update the database.
@@ -184,16 +194,6 @@ docker compose exec php php artisan collections:cron
 ```
 
 > :warning: Depending on the amount of data, the update process can take some time.
-
-## 10. Queue Workers
-
-- **Queues** are used in the application to handle background jobs like sending emails. To ensure that emails and other background jobs are processed, you must run the following command to start the queue worker:
-
-```bash
-docker compose exec php php artisan queue:work
-```
-
-> :warning: This worker should be running at all times to process queued jobs like sending emails.
 
 ## Other
 

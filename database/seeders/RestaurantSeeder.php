@@ -10,8 +10,9 @@ use Illuminate\Database\Seeder;
 class RestaurantSeeder extends Seeder
 {
 
-    public function run($language): void
+    public function run(): void
     {
+        $language = config('app.seeder_language', 'es');
         $path = database_path() . '/data/' . $language . '-restaurants.json';
         $json = file_get_contents($path);
         $jsonData = json_decode($json, false);

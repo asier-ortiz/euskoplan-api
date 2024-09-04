@@ -5,12 +5,14 @@ namespace Database\Seeders;
 use App\Models\Fair;
 use App\Models\Image;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 
 class FairSeeder extends Seeder
 {
 
-    public function run($language)
+    public function run()
     {
+        $language = config('app.seeder_language', 'es');
         $path = database_path() . '/data/' . $language . '-fairs.json';
         $json = file_get_contents($path);
         $jsonData = json_decode($json, false);

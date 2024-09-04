@@ -11,8 +11,9 @@ use Illuminate\Database\Seeder;
 class EventSeeder extends Seeder
 {
 
-    public function run($language)
+    public function run()
     {
+        $language = config('app.seeder_language', 'es');
         $path = database_path() . '/data/' . $language . '-events.json';
         $json = file_get_contents($path);
         $jsonData = json_decode($json, false);
