@@ -206,40 +206,8 @@ class PlanController extends Controller
         // Si todos los itinerarios cacheados ya fueron vistos o no hay itinerarios en caché
         $data = $this->prepareItineraryData($province, $month, $year, $days, $tripType, $language);
 
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => 'You are a helpful assistant that generates detailed itineraries based on provided data.'
-            ],
-            [
-                'role' => 'user',
-                'content' => 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-
-                Incluye el `resource_id` y `planables_type` para cada recurso utilizado en el itinerario.
-                Devuelve la respuesta en ' . $language . ' Donde "es" => español y "en" => inglés.
-
-                Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
-
-                "title": Título corto del itinerario,
-                "description": Descripción general del itinerario completo en un párrafo corto,
-                "steps":
-                [
-                    {
-                        "indice": número del paso,
-                        "dia": número del día,
-                        "indicaciones": "descripción detallada del paso",
-                        "resource_id": id del recurso utilizado,
-                        "planables_type": "tipo del recurso utilizado. Ha de ser sólo el nombre de la colección en minúsculas: accommodation, cave, cultural, event, fair, locality, museum, natural, restaurant"
-                    },
-                    ...
-                ]
-
-                Aquí tienes los recursos disponibles:
-                Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
-                Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
-                Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
-            ]
-        ];
+        // Genera los mensajes para el servicio de OpenAI
+        $messages = $this->generateItineraryMessages($days, $data, $language);
 
         $openAiApiKey = env('OPENAI_API_KEY');
         $response = Http::withHeaders([
@@ -467,6 +435,66 @@ class PlanController extends Controller
             'restaurant' => Restaurant::find($resourceId),
             default => null,
         };
+    }
+
+    private function generateItineraryMessages($days, $data, $language): array
+    {
+        return [
+            [
+                'role' => 'system',
+                'content' => 'You are a helpful assistant that generates detailed itineraries based on provided data.'
+            ],
+            [
+                'role' => 'user',
+                'content' => ($language === 'en' ?
+                    'Generate a ' . $days . '-day itinerary based on this data.
+                Include the `resource_id` and `planables_type` for each resource used in the itinerary.
+                Respond in English.
+                Format the response as JSON (only JSON) with the following structure:
+
+                "title": Short title of the itinerary,
+                "description": Short general description of the itinerary,
+                "steps": [
+                    {
+                        "indice": Step number,
+                        "dia": Day number,
+                        "indicaciones": "Detailed step description",
+                        "resource_id": ID of the resource used,
+                        "planables_type": Type of the resource (collection name in lowercase, e.g., accommodation, cave, cultural, etc.)"
+                    },
+                    ...
+                ]
+
+                Here are the available resources:
+                Points of interest: ' . json_encode($data['places']->toArray()) . ',
+                Accommodations: ' . json_encode($data['accommodations']->toArray()) . ',
+                Restaurants: ' . json_encode($data['restaurants']->toArray()) . '.' :
+
+                    'Genera un itinerario de ' . $days . ' días basado en estos datos.
+                Incluye el `resource_id` y `planables_type` para cada recurso utilizado en el itinerario.
+                Devuelve la respuesta en español.
+                Devuelve la respuesta en formato JSON (Sólo el JSON) con la estructura:
+
+                "title": Título corto del itinerario,
+                "description": Descripción general del itinerario completo en un párrafo corto,
+                "steps": [
+                    {
+                        "indice": Número del paso,
+                        "dia": Número del día,
+                        "indicaciones": "Descripción detallada del paso",
+                        "resource_id": ID del recurso utilizado,
+                        "planables_type": Tipo del recurso (nombre de la colección en minúsculas)"
+                    },
+                    ...
+                ]
+
+                Aquí tienes los recursos disponibles:
+                Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
+                Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
+                Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
+                )
+            ]
+        ];
     }
 
 }
