@@ -86,15 +86,15 @@ class PlanResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'id_usuario' => $this->user_id,
-            'nombre_usuario' => $username,
             'idioma' => $this->idioma,
+            'slug' => $this->getRouteKey(),
             'titulo' => $this->titulo,
             'descripcion' => $this->descripcion,
-            'slug' => $this->getRouteKey(),
             'votos' => $this->votos,
             'publico' => $this->publico,
-            'pasos' => $steps
+            'pasos' => $steps,
+            'id_usuario' => $this->user_id,
+            'nombre_usuario' => $username,
         ];
     }
 }

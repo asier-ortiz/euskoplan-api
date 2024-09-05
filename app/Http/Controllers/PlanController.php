@@ -19,6 +19,8 @@ use App\Models\Plan;
 use App\Models\Restaurant;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
@@ -180,9 +182,10 @@ class PlanController extends Controller
         $year = $validatedData['año'];
         $days = $validatedData['dias'];
         $tripType = $validatedData['tipo_viaje'];
+        $language = $validatedData['idioma'];
 
         $userId = $request->user()->id;
-        $cacheKey = 'itinerary_' . md5($province . $month . $year . $days . $tripType);
+        $cacheKey = 'itinerary_' . md5($province . $month . $year . $days . $tripType . $language);
         $userViewedKey = 'user_' . $userId . '_viewed_' . $cacheKey;
 
         // Obtener itinerarios cacheados y los itinerarios que el usuario ya ha visto
@@ -201,7 +204,7 @@ class PlanController extends Controller
         }
 
         // Si todos los itinerarios cacheados ya fueron vistos o no hay itinerarios en caché
-        $data = $this->prepareItineraryData($province, $month, $year, $days, $tripType);
+        $data = $this->prepareItineraryData($province, $month, $year, $days, $tripType, $language);
 
         $messages = [
             [
@@ -211,28 +214,30 @@ class PlanController extends Controller
             [
                 'role' => 'user',
                 'content' => 'Genera un itinerario de ' . $days . ' días basado en estos datos.
-        Incluye el `planables_id` y `planables_type` para cada recurso utilizado en el itinerario.
 
-        Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
+                Incluye el `resource_id` y `planables_type` para cada recurso utilizado en el itinerario.
+                Devuelve la respuesta en ' . $language . ' Donde "es" => español y "en" => inglés.
 
-        "title": Título corto del itinerario,
-        "description": Descripción general del itinerario completo en un párrafo corto,
-        "steps":
-        [
-            {
-                "indice": número del paso,
-                "dia": número del día,
-                "indicaciones": "descripción detallada del paso",
-                "planables_id": id del recurso utilizado,
-                "planables_type": "tipo del recurso utilizado"
-            },
-            ...
-        ]
+                Devuelve la respuesta en formato JSON (Sólo el JSON), con la estructura:
 
-        Aquí tienes los recursos disponibles:
-        Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
-        Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
-        Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
+                "title": Título corto del itinerario,
+                "description": Descripción general del itinerario completo en un párrafo corto,
+                "steps":
+                [
+                    {
+                        "indice": número del paso,
+                        "dia": número del día,
+                        "indicaciones": "descripción detallada del paso",
+                        "resource_id": id del recurso utilizado,
+                        "planables_type": "tipo del recurso utilizado. Ha de ser sólo el nombre de la colección en minúsculas: accommodation, cave, cultural, event, fair, locality, museum, natural, restaurant"
+                    },
+                    ...
+                ]
+
+                Aquí tienes los recursos disponibles:
+                Lugares de interés: ' . json_encode($data['places']->toArray()) . ',
+                Alojamientos: ' . json_encode($data['accommodations']->toArray()) . ',
+                Restaurantes: ' . json_encode($data['restaurants']->toArray()) . '.'
             ]
         ];
 
@@ -264,11 +269,18 @@ class PlanController extends Controller
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
+            foreach ($decodedResponse['steps'] as &$step) {
+                $resource = $this->fetchResource($step['resource_id'], $step['planables_type']);
+                if ($resource) {
+                    $step['resource'] = $resource; // Añade la información del recurso al paso
+                }
+            }
+
             $itineraryHash = md5(json_encode($decodedResponse)); // Hash del contenido del itinerario
             $tempPlan = [
                 'hash' => $itineraryHash,
                 'data' => [
-                    'language' => 'es',
+                    'language' => $language,
                     'title' => $decodedResponse['title'],
                     'description' => $decodedResponse['description'],
                     'public' => false,
@@ -295,7 +307,7 @@ class PlanController extends Controller
         }
     }
 
-    public function prepareItineraryData($province, $month, $year, $days, $tripType): array
+    private function prepareItineraryData($province, $month, $year, $days, $tripType, $language): array
     {
         $filteredPlaces = collect();
 
@@ -304,15 +316,16 @@ class PlanController extends Controller
             $events = Event::where('nombreProvincia', $province)
                 ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
                 ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
+                ->where('idioma', $language)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Conciertos', 'Danza y Teatro', 'Exposiciones',
                     'Festivales', 'Fiestas y Tradiciones', 'Visitas y rutas guiadas'
                 ])->get();
 
             // Resto de lugares
-            $culturalPlaces = Cultural::where('nombreProvincia', $province)->get();
-            $museums = Museum::where('nombreProvincia', $province)->get();
-            $localities = Locality::where('nombreProvincia', $province)->get();
+            $culturalPlaces = Cultural::where('nombreProvincia', $province)->where('idioma', $language)->get();
+            $museums = Museum::where('nombreProvincia', $province)->where('idioma', $language)->get();
+            $localities = Locality::where('nombreProvincia', $province)->where('idioma', $language)->get();
 
             // Ponderación: duplicar los eventos para darles mayor prioridad
             $events = $events->merge($events);
@@ -327,12 +340,13 @@ class PlanController extends Controller
             $events = Event::where('nombreProvincia', $province)
                 ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
                 ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
+                ->where('idioma', $language)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Deportes', 'Visitas y rutas guiadas', 'Festivales', 'Otros'
                 ])->get();
 
-            $naturalPlaces = Natural::where('nombreProvincia', $province)->get();
-            $caves = Cave::where('nombreProvincia', $province)->get();
+            $naturalPlaces = Natural::where('nombreProvincia', $province)->where('idioma', $language)->get();
+            $caves = Cave::where('nombreProvincia', $province)->where('idioma', $language)->get();
 
             $events = $events->merge($events);
 
@@ -344,14 +358,15 @@ class PlanController extends Controller
             $events = Event::where('nombreProvincia', $province)
                 ->whereMonth(DB::raw('DATE(fechaInicio)'), '=', $month)
                 ->whereYear(DB::raw('DATE(fechaInicio)'), '=', $year)
+                ->where('idioma', $language)
                 ->whereIn('nombreSubtipoRecurso', [
                     'Actividades familiares', 'Eventos gastronómicos',
                     'Fiestas y Tradiciones', 'Festivales'
                 ])->get();
 
-            $fairs = Fair::where('nombreProvincia', $province)->get();
-            $naturalPlaces = Natural::where('nombreProvincia', $province)->get();
-            $museums = Museum::where('nombreProvincia', $province)->get();
+            $fairs = Fair::where('nombreProvincia', $province)->where('idioma', $language)->get();
+            $naturalPlaces = Natural::where('nombreProvincia', $province)->where('idioma', $language)->get();
+            $museums = Museum::where('nombreProvincia', $province)->where('idioma', $language)->get();
 
             $events = $events->merge($events);
 
@@ -372,6 +387,7 @@ class PlanController extends Controller
 
         // Filtrar alojamientos y restaurantes cercanos a las actividades de la mañana
         $accommodations = Accommodation::where('nombreProvincia', $province)
+            ->where('idioma', $language)
             ->where(function ($query) use ($tripType) {
                 if ($tripType == 'cultura') {
                     $query->whereIn('nombreSubtipoRecurso', ['Hotel', 'Pensión']);
@@ -386,6 +402,7 @@ class PlanController extends Controller
             ->get();
 
         $restaurants = Restaurant::where('nombreProvincia', $province)
+            ->where('idioma', $language)
             ->where(function ($query) use ($tripType) {
                 if ($tripType == 'cultura') {
                     $query->whereIn('nombreSubtipoRecurso', ['Restaurante', 'Bodegas de Vino']);
@@ -434,6 +451,22 @@ class PlanController extends Controller
                 ];
             })
         ];
+    }
+
+    private function fetchResource($resourceId, $planablesType): array|Model|Cultural|Collection|Event|Natural|Accommodation|Locality|Cave|Fair|null
+    {
+        return match ($planablesType) {
+            'accommodation' => Accommodation::find($resourceId),
+            'cave' => Cave::find($resourceId),
+            'cultural' => Cultural::find($resourceId),
+            'event' => Event::find($resourceId),
+            'fair' => Fair::find($resourceId),
+            'locality' => Locality::find($resourceId),
+            'museum' => Museum::find($resourceId),
+            'natural' => Natural::find($resourceId),
+            'restaurant' => Restaurant::find($resourceId),
+            default => null,
+        };
     }
 
 }
