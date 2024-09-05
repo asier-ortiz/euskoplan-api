@@ -6,9 +6,12 @@ use App\Models\EmailVerify;
 use App\Models\Favourite;
 use App\Models\PasswordReset;
 use App\Models\Plan;
+use App\Models\Step;
 use App\Models\User;
 use App\Observers\EmailVerifyObserver;
 use App\Observers\PasswordResetObserver;
+use App\Observers\PlanObserver;
+use App\Observers\StepObserver;
 use App\Observers\UserObserver;
 use Gate;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -68,5 +71,7 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         EmailVerify::observe(EmailVerifyObserver::class);
         PasswordReset::observe(PasswordResetObserver::class);
+        Plan::observe(PlanObserver::class);
+        Step::observe(StepObserver::class);
     }
 }

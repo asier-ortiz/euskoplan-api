@@ -155,22 +155,47 @@ class PlanController extends Controller
 
     public function route($id, $profile): mixed
     {
+        // Obtiene el plan y verifica permisos
         $plan = Plan::find($id);
         if (!$plan || !Gate::allows('read-plan', $plan)) {
-            return response(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+            return response(['error' => 'Prohibido'], Response::HTTP_FORBIDDEN);
         }
 
+        // Obtiene los pasos del plan
         $planResource = new PlanResource($plan);
         $steps = json_decode($planResource->toJson())->pasos;
         if (count($steps) < 2) {
-            return response(['error' => 'Not enough plan steps'], Response::HTTP_BAD_REQUEST);
+            return response(['error' => 'No hay suficientes pasos en el plan'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Genera una cadena de coordenadas basada en los pasos
         $coordinatesString = implode(';', array_map(fn($step) => $step->recurso->longitud . ',' . $step->recurso->latitud, $steps));
 
+        // Genera una clave de caché única basada en el ID del plan, el perfil y las coordenadas
+        $cacheKey = 'map_route_' . md5($id . $profile . $coordinatesString);
+
+        // Verifica si la ruta ya está almacenada en caché
+        $cachedRoute = Cache::get($cacheKey);
+        if ($cachedRoute) {
+            return response()->json($cachedRoute);
+        }
+
+        // Si no está en caché, realiza la solicitud a la API de Mapbox
         $token = env('MAP_BOX_TOKEN');
         $response = Http::get("https://api.mapbox.com/directions/v5/mapbox/$profile/$coordinatesString?alternatives=false&geometries=geojson&language=es&overview=simplified&steps=false&access_token=$token");
-        return $response->json();
+
+        // Verifica si la respuesta de la API fue exitosa
+        if ($response->successful()) {
+            $routeData = $response->json();
+
+            // Almacena en caché los datos de la ruta por 7 días (60 * 60 * 24 * 7 segundos)
+            Cache::put($cacheKey, $routeData, 60 * 60 * 24 * 7);
+
+            return response()->json($routeData);
+        } else {
+            // Maneja el caso de error si la solicitud a la API falla
+            return response()->json(['error' => 'Error al obtener la ruta de Mapbox'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function suggestItinerary(PlanSuggestRequest $request): JsonResponse
