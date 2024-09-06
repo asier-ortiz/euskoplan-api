@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\EventCompactResource;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Traits\HasCategories;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class EventController extends Controller
 {
+    use HasCategories;
 
     public function show($code, $language): EventResource
     {
@@ -78,14 +80,9 @@ class EventController extends Controller
                 ->get());
     }
 
-    public function categories($language): Collection
+    protected function getModel(): string
     {
-        return Event::select('nombreSubtipoRecurso as nombre_subtipo_recurso')
-            ->whereNotNull('nombreSubtipoRecurso')
-            ->where('idioma', '=', $language)
-            ->distinct()
-            ->orderBy('nombreSubtipoRecurso')
-            ->get();
+        return Event::class;
     }
 
 }

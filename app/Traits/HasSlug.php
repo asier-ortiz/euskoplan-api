@@ -4,7 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Support\Str;
 
-trait Slug
+trait HasSlug
 {
     /**
      * Generate the slug for the model.

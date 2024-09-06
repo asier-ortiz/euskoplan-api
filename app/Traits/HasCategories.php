@@ -17,6 +17,6 @@ trait HasCategories
             ->orderBy('nombreSubtipoRecurso')
             ->get();
     }
-    
+
     abstract protected function getModel();
 }

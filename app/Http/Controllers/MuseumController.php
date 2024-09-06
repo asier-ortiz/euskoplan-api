@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\MuseumCompactResource;
 use App\Http\Resources\MuseumResource;
 use App\Models\Museum;
+use App\Traits\HasCategories;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class MuseumController extends Controller
 {
+    use HasCategories;
 
     public function show($code, $language): MuseumResource
     {
@@ -72,14 +74,9 @@ class MuseumController extends Controller
                 ->get());
     }
 
-    public function categories($language): Collection
+    protected function getModel(): string
     {
-        return Museum::select('nombreSubtipoRecurso as nombre_subtipo_recurso')
-            ->whereNotNull('nombreSubtipoRecurso')
-            ->where('idioma', '=', $language)
-            ->distinct()
-            ->orderBy('nombreSubtipoRecurso')
-            ->get();
+        return Museum::class;
     }
 
 }

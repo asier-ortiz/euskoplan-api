@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CulturalCompactResource;
 use App\Http\Resources\CulturalResource;
 use App\Models\Cultural;
+use App\Traits\HasCategories;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class CulturalController extends Controller
 {
+    use HasCategories;
 
     public function show($code, $language): CulturalResource
     {
@@ -72,14 +74,9 @@ class CulturalController extends Controller
                 ->get());
     }
 
-    public function categories($language): Collection
+    protected function getModel(): string
     {
-        return Cultural::select('nombreSubtipoRecurso as nombre_subtipo_recurso')
-            ->whereNotNull('nombreSubtipoRecurso')
-            ->where('idioma', '=', $language)
-            ->distinct()
-            ->orderBy('nombreSubtipoRecurso')
-            ->get();
+        return Cultural::class;
     }
 
 }

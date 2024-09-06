@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CaveCompactResource;
 use App\Http\Resources\CaveResource;
 use App\Models\Cave;
+use App\Traits\HasCategories;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class CaveController extends Controller
 {
+    use HasCategories;
 
     public function show($code, $language): CaveResource
     {
@@ -72,14 +74,9 @@ class CaveController extends Controller
                 ->get());
     }
 
-    public function categories($language): Collection
+    protected function getModel(): string
     {
-        return Cave::select('nombreSubtipoRecurso as nombre_subtipo_recurso')
-            ->whereNotNull('nombreSubtipoRecurso')
-            ->where('idioma', '=', $language)
-            ->distinct()
-            ->orderBy('nombreSubtipoRecurso')
-            ->get();
+        return Cave::class;
     }
 
 }

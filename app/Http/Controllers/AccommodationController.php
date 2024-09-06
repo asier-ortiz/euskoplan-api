@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AccommodationResource;
 use App\Http\Resources\AccommodationCompactResource;
 use App\Models\Accommodation;
+use App\Traits\HasCategories;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class AccommodationController extends Controller
 {
+    use HasCategories;
 
     public function show($code, $language): AccommodationResource
     {
@@ -72,14 +74,9 @@ class AccommodationController extends Controller
                 ->get());
     }
 
-    public function categories($language): Collection
+    protected function getModel(): string
     {
-        return Accommodation::select('nombreSubtipoRecurso as nombre_subtipo_recurso')
-            ->whereNotNull('nombreSubtipoRecurso')
-            ->where('idioma', '=', $language)
-            ->distinct()
-            ->orderBy('nombreSubtipoRecurso')
-            ->get();
+        return Accommodation::class;
     }
 
 }
