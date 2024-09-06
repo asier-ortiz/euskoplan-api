@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Resources\NaturalCompactResource;
 use App\Http\Resources\NaturalResource;
 use App\Models\Natural;
+use App\Traits\HasFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
 
 class NaturalController extends Controller
 {
+    use HasFilter;
 
     public function show($code, $language): NaturalResource
     {
@@ -18,61 +19,26 @@ class NaturalController extends Controller
         return new NaturalResource($natural);
     }
 
-    public function filter(): AnonymousResourceCollection
+    // Aplica los filtros adicionales específicos para recursos naturales
+    protected function applyAdditionalFilters(Builder $query): void
     {
-        $terms = explode(" ", request('busqueda', ''));
+        $query->when(request('nombre_subtipo_recurso_espacio_natural'), function (Builder $query) {
+            $query->where('nombreSubTipoRecursoEspacioNatural', 'like', '%' . request('nombre_subtipo_recurso_espacio_natural') . '%');
+        });
 
-        return NaturalCompactResource::collection(
-            Natural::query()
-                ->when(request('idioma'), function (Builder $query) {
-                    $query->where('idioma', '=', request('idioma'));
-                })
-                ->when(request('nombre_provincia'), function (Builder $query) {
-                    $query->where('nombreProvincia', 'like', '%' . request('nombre_provincia') . '%');
-                })
-                ->when(request('nombre_municipio'), function (Builder $query) {
-                    $query->where('nombreMunicipio', 'like', '%' . request('nombre_municipio') . '%');
-                })
-                ->when(request('nombre_subtipo_recurso_espacio_natural'), function (Builder $query) {
-                    $query->where('nombreSubTipoRecursoEspacioNatural', 'like', '%' . request('nombre_subtipo_recurso_espacio_natural') . '%');
-                })
-                ->when(request('nombre_subtipo_recurso_playas_pantanos_rios'), function (Builder $query) {
-                    $query->where('nombreSubTipoRecursoPlayasPantanosRios', 'like', '%' . request('nombre_subtipo_recurso_playas_pantanos_rios') . '%');
-                })
-                ->when(request('descripcion'), function (Builder $query) {
-                    $query->where('descripcion', 'like', '%' . request('descripcion') . '%');
-                })
-                ->when(request('longitud') && request('latitud') && request('distancia'), function (Builder $query) {
-                    $haversine = "(6371 * acos(cos(radians(?))
-                                * cos(radians(gmLatitud))
-                                * cos(radians(gmLongitud) - radians(?))
-                                + sin(radians(?))
-                                * sin(radians(gmLatitud))))";
+        $query->when(request('nombre_subtipo_recurso_playas_pantanos_rios'), function (Builder $query) {
+            $query->where('nombreSubTipoRecursoPlayasPantanosRios', 'like', '%' . request('nombre_subtipo_recurso_playas_pantanos_rios') . '%');
+        });
+    }
 
-                    $query->whereRaw("$haversine < ?", [
-                        request('latitud'),
-                        request('longitud'),
-                        request('latitud'),
-                        request('distancia')
-                    ]);
-                })
-                ->when($terms, function (Builder $query) use ($terms) {
-                    $query->where(function (Builder $query) use ($terms) {
-                        foreach ($terms as $term) {
-                            $query->orWhere('nombre', 'like', '%' . $term . '%')
-                                ->orWhere('nombreSubTipoRecursoEspacioNatural', 'like', '%' . $term . '%')
-                                ->orWhere('nombreSubTipoRecursoPlayasPantanosRios', 'like', '%' . $term . '%')
-                                ->orWhere('descripcion', 'like', '%' . $term . '%');
-                        }
-                    });
-                })
-                ->when(request('aleatorio') === 'si', function (Builder $query) {
-                    $query->inRandomOrder();
-                })
-                ->when(request('limite'), function (Builder $query) {
-                    $query->take(request('limite'));
-                })
-                ->get());
+    protected function getModel(): string
+    {
+        return Natural::class;
+    }
+
+    protected function getResourceClass(): string
+    {
+        return NaturalCompactResource::class;
     }
 
     public function categories($language): array
@@ -95,5 +61,4 @@ class NaturalController extends Controller
 
         return $categories;
     }
-
 }

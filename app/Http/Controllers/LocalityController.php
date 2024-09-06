@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Resources\LocalityNameResource;
 use App\Http\Resources\LocalityResource;
 use App\Models\Locality;
+use App\Traits\HasFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
 
 class LocalityController extends Controller
 {
+    use HasFilter;
 
     public function show($code, $language): LocalityResource
     {
@@ -18,44 +19,14 @@ class LocalityController extends Controller
         return new LocalityResource($locality);
     }
 
-    public function filter(): AnonymousResourceCollection
+    protected function getModel(): string
     {
-        return LocalityResource::collection(
-            Locality::query()
-                ->when(request('idioma'), function (Builder $query) {
-                    $query->where('idioma', '=', request('idioma'));
-                })
-                ->when(request('nombre'), function (Builder $query) {
-                    $query->where('nombre', 'like', '%' . request('nombre') . '%');
-                })
-                ->when(request('nombre_provincia'), function (Builder $query) {
-                    $query->where('nombreProvincia', 'like', '%' . request('nombre_provincia') . '%');
-                })
-                ->when(request('descripcion'), function (Builder $query) {
-                    $query->where('descripcion', 'like', '%' . request('descripcion') . '%');
-                })
-                ->when(request('longitud') && request('latitud') && request('distancia'), function (Builder $query) {
-                    $haversine = "(6371 * acos(cos(radians(?))
-                                * cos(radians(gmLatitud))
-                                * cos(radians(gmLongitud) - radians(?))
-                                + sin(radians(?))
-                                * sin(radians(gmLatitud))))";
+        return Locality::class;
+    }
 
-                    $query->whereRaw("$haversine < ?", [
-                        request('latitud'),
-                        request('longitud'),
-                        request('latitud'),
-                        request('distancia')
-                    ]);
-                })
-                ->when(request('aleatorio') === 'si', function (Builder $query) {
-                    $query->inRandomOrder();
-                })
-                ->when(request('limite'), function (Builder $query) {
-                    $query->take(request('limite'));
-                })
-                ->orderBy('nombre')
-                ->get());
+    protected function getResourceClass(): string
+    {
+        return LocalityResource::class;
     }
 
     public function search(): AnonymousResourceCollection
@@ -88,5 +59,4 @@ class LocalityController extends Controller
                 ->orderBy('nombre')
                 ->get());
     }
-
 }
