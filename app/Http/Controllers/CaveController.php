@@ -7,24 +7,32 @@ use App\Http\Resources\CaveResource;
 use App\Models\Cave;
 use App\Traits\HasCategories;
 use App\Traits\HasFilter;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Traits\HasShow;
 
 class CaveController extends Controller
 {
-    use HasCategories, HasFilter;
+    use HasCategories, HasFilter, HasShow;
 
-    public function show($code, $language): CaveResource
-    {
-        $cave = Cave::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
-        return new CaveResource($cave);
-    }
-
+    // Define el modelo para los traits HasShow y HasFilter
     protected function getModel(): string
     {
         return Cave::class;
     }
 
-    protected function getResourceClass(): string
+    // Definir los campos específicos para la búsqueda por términos
+    protected function getFieldsToSearch(): array
+    {
+        return ['nombre', 'nombreSubtipoRecurso', 'descripcion'];
+    }
+
+    // Define el recurso detallado para la función show
+    protected function getDetailedResourceClass(): string
+    {
+        return CaveResource::class;
+    }
+
+    // Define el recurso compacto para la función filter
+    protected function getCompactResourceClass(): string
     {
         return CaveCompactResource::class;
     }

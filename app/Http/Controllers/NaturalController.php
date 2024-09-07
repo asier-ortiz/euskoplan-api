@@ -6,17 +6,23 @@ use App\Http\Resources\NaturalCompactResource;
 use App\Http\Resources\NaturalResource;
 use App\Models\Natural;
 use App\Traits\HasFilter;
+use App\Traits\HasShow;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NaturalController extends Controller
 {
-    use HasFilter;
+    use HasFilter, HasShow;
 
-    public function show($code, $language): NaturalResource
+    // Define el modelo para los traits HasShow y HasFilter
+    protected function getModel(): string
     {
-        $natural = Natural::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
-        return new NaturalResource($natural);
+        return Natural::class;
+    }
+
+    // Definir los campos específicos para la búsqueda por términos
+    protected function getFieldsToSearch(): array
+    {
+        return ['nombre', 'nombreSubTipoRecursoEspacioNatural', 'nombreSubTipoRecursoPlayasPantanosRios', 'descripcion'];
     }
 
     // Aplica los filtros adicionales específicos para recursos naturales
@@ -31,12 +37,14 @@ class NaturalController extends Controller
         });
     }
 
-    protected function getModel(): string
+    // Define el recurso detallado para la función show
+    protected function getDetailedResourceClass(): string
     {
-        return Natural::class;
+        return NaturalResource::class;
     }
 
-    protected function getResourceClass(): string
+    // Define el recurso compacto para la función filter
+    protected function getCompactResourceClass(): string
     {
         return NaturalCompactResource::class;
     }

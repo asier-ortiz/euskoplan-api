@@ -11,8 +11,8 @@ trait HasFilter
     {
         $terms = explode(" ", request('busqueda', ''));
 
-        // Usa la función 'getModel' y 'getResourceClass' definidas en el controlador
-        $resourceClass = $this->getResourceClass();
+        // Usa la función 'getModel' y 'getCompactResourceClass' definidas en el controlador
+        $resourceClass = $this->getCompactResourceClass();
         $query = $this->getModel()::query();
 
         // Campos comunes en todos los controladores
@@ -54,11 +54,16 @@ trait HasFilter
         // Aplica filtros adicionales específicos del controlador
         $this->applyAdditionalFilters($query);
 
-        $query->when($terms, function (Builder $query) use ($terms) {
-            $query->where(function (Builder $query) use ($terms) {
+        // Definir los campos que se usarán para buscar términos en el controlador
+        $fieldsToSearch = $this->getFieldsToSearch();
+
+        // Filtro por términos en los campos definidos
+        $query->when($terms, function (Builder $query) use ($terms, $fieldsToSearch) {
+            $query->where(function (Builder $query) use ($terms, $fieldsToSearch) {
                 foreach ($terms as $term) {
-                    $query->orWhere('nombre', 'like', '%' . $term . '%')
-                        ->orWhere('descripcion', 'like', '%' . $term . '%');
+                    foreach ($fieldsToSearch as $field) {
+                        $query->orWhere($field, 'like', '%' . $term . '%');
+                    }
                 }
             });
         });
@@ -75,12 +80,14 @@ trait HasFilter
     }
 
     // Métodos abstractos que deben ser implementados en el controlador
-    abstract protected function getResourceClass();
+    abstract protected function getCompactResourceClass();
     abstract protected function getModel();
+    abstract protected function getFieldsToSearch(): array;
 
     // Función para aplicar filtros adicionales, que puede ser sobreescrita
     protected function applyAdditionalFilters(Builder $query)
     {
         // Filtros adicionales por defecto, si se necesitan
     }
+
 }

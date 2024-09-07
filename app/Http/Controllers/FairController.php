@@ -6,25 +6,32 @@ use App\Http\Resources\FairCompactResource;
 use App\Http\Resources\FairResource;
 use App\Models\Fair;
 use App\Traits\HasFilter;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Traits\HasShow;
 
 class FairController extends Controller
 {
-    use HasFilter;
+    use HasFilter, HasShow;
 
-    public function show($code, $language): FairResource
-    {
-        $fair = Fair::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
-        return new FairResource($fair);
-    }
-
+    // Define el modelo para los traits HasShow y HasFilter
     protected function getModel(): string
     {
         return Fair::class;
     }
 
-    protected function getResourceClass(): string
+    // Definir los campos específicos para la búsqueda por términos
+    protected function getFieldsToSearch(): array
+    {
+        return ['nombre', 'descripcion'];
+    }
+
+    // Define el recurso detallado para la función show
+    protected function getDetailedResourceClass(): string
+    {
+        return FairResource::class;
+    }
+
+    // Define el recurso compacto para la función filter
+    protected function getCompactResourceClass(): string
     {
         return FairCompactResource::class;
     }

@@ -7,17 +7,23 @@ use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Traits\HasCategories;
 use App\Traits\HasFilter;
+use App\Traits\HasShow;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EventController extends Controller
 {
-    use HasCategories, HasFilter;
+    use HasCategories, HasFilter, HasShow;
 
-    public function show($code, $language): EventResource
+    // Define el modelo para los traits HasShow y HasFilter
+    protected function getModel(): string
     {
-        $event = Event::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
-        return new EventResource($event);
+        return Event::class;
+    }
+
+    // Definir los campos específicos para la búsqueda por términos
+    protected function getFieldsToSearch(): array
+    {
+        return ['nombre', 'nombreSubtipoRecurso', 'descripcion'];
     }
 
     // Aplica los filtros adicionales específicos para eventos (fechas)
@@ -32,12 +38,14 @@ class EventController extends Controller
         });
     }
 
-    protected function getModel(): string
+    // Define el recurso detallado para la función show
+    protected function getDetailedResourceClass(): string
     {
-        return Event::class;
+        return EventResource::class;
     }
 
-    protected function getResourceClass(): string
+    // Define el recurso compacto para la función filter
+    protected function getCompactResourceClass(): string
     {
         return EventCompactResource::class;
     }

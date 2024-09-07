@@ -7,24 +7,32 @@ use App\Http\Resources\MuseumResource;
 use App\Models\Museum;
 use App\Traits\HasCategories;
 use App\Traits\HasFilter;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Traits\HasShow;
 
 class MuseumController extends Controller
 {
-    use HasCategories, HasFilter;
+    use HasCategories, HasFilter, HasShow;
 
-    public function show($code, $language): MuseumResource
-    {
-        $museum = Museum::where('codigo', '=', $code)->where('idioma', '=', $language)->firstOrFail();
-        return new MuseumResource($museum);
-    }
-
+    // Define el modelo para los traits HasShow y HasFilter
     protected function getModel(): string
     {
         return Museum::class;
     }
 
-    protected function getResourceClass(): string
+    // Definir los campos específicos para la búsqueda por términos
+    protected function getFieldsToSearch(): array
+    {
+        return ['nombre', 'nombreSubtipoRecurso', 'descripcion'];
+    }
+
+    // Define el recurso detallado para la función show
+    protected function getDetailedResourceClass(): string
+    {
+        return MuseumResource::class;
+    }
+
+    // Define el recurso compacto para la función filter
+    protected function getCompactResourceClass(): string
     {
         return MuseumCompactResource::class;
     }
