@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 // Registro y login
 Route::group(['prefix' => 'user'], function () {
     Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,10'); // 5 solicitudes cada 10 minutos
-    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,10');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:20,10');
     Route::get('find/email/{email}', [AuthController::class, 'findByEmail'])->middleware('throttle:20,1');
     Route::get('find/username/{username}', [AuthController::class, 'findByUsername'])->middleware('throttle:20,1');
 });
