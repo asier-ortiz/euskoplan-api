@@ -449,15 +449,15 @@ class PlanController extends Controller
     private function fetchResource($resourceId, $planablesType): array|Model|Cultural|Collection|Event|Natural|Accommodation|Locality|Cave|Fair|null
     {
         return match ($planablesType) {
-            'accommodation' => Accommodation::find($resourceId),
-            'cave' => Cave::find($resourceId),
-            'cultural' => Cultural::find($resourceId),
-            'event' => Event::find($resourceId),
-            'fair' => Fair::find($resourceId),
-            'locality' => Locality::find($resourceId),
-            'museum' => Museum::find($resourceId),
-            'natural' => Natural::find($resourceId),
-            'restaurant' => Restaurant::find($resourceId),
+            'accommodations' => Accommodation::find($resourceId),
+            'caves' => Cave::find($resourceId),
+            'culturals' => Cultural::find($resourceId),
+            'events' => Event::find($resourceId),
+            'fairs' => Fair::find($resourceId),
+            'localities' => Locality::find($resourceId),
+            'museums' => Museum::find($resourceId),
+            'naturals' => Natural::find($resourceId),
+            'restaurants' => Restaurant::find($resourceId),
             default => null,
         };
     }
