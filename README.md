@@ -162,6 +162,7 @@ Once the Docker containers are running, you can access various services provided
         - **Port**: `6379`
         - **Username**: (leave blank)
         - **Password**: `password`
+        - **Database Index**: `1`
 
 - **MailHog**: A web interface to view emails sent by the application (for local development only).
     - URL: [http://localhost:8025](http://localhost:8025)

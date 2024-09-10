@@ -175,7 +175,7 @@ class PlanController extends Controller
         $cacheKey = 'map_route_' . md5($id . $profile . $coordinatesString);
 
         // Verifica si la ruta ya está almacenada en caché
-        $cachedRoute = Cache::get($cacheKey);
+        $cachedRoute = Cache::store('redis')->get($cacheKey);
         if ($cachedRoute) {
             return response()->json($cachedRoute);
         }
@@ -189,7 +189,7 @@ class PlanController extends Controller
             $routeData = $response->json();
 
             // Almacena en caché los datos de la ruta por 7 días (60 * 60 * 24 * 7 segundos)
-            Cache::put($cacheKey, $routeData, 60 * 60 * 24 * 7);
+            Cache::store('redis')->put($cacheKey, $routeData, 60 * 60 * 24 * 7);
 
             return response()->json($routeData);
         } else {
@@ -214,8 +214,8 @@ class PlanController extends Controller
         $userViewedKey = 'user_' . $userId . '_viewed_' . $cacheKey;
 
         // Obtener itinerarios cacheados y los itinerarios que el usuario ya ha visto
-        $cachedItineraries = Cache::get($cacheKey, []);
-        $userViewedItineraries = Cache::get($userViewedKey, []);
+        $cachedItineraries = Cache::store('redis')->get($cacheKey, []);
+        $userViewedItineraries = Cache::store('redis')->get($userViewedKey, []);
 
         // Filtrar los itinerarios no vistos por el usuario
         $unseenItineraries = array_diff_key($cachedItineraries, array_flip($userViewedItineraries));
@@ -224,7 +224,7 @@ class PlanController extends Controller
             // Devolver un itinerario no visto por el usuario
             $itinerary = reset($unseenItineraries);
             $userViewedItineraries[] = $itinerary['hash']; // Guardar que este itinerario ya fue visto
-            Cache::put($userViewedKey, $userViewedItineraries, 60 * 60 * 24);
+            Cache::store('redis')->put($userViewedKey, $userViewedItineraries, 60 * 60 * 24);
             return response()->json($itinerary['data'], Response::HTTP_OK);
         }
 
@@ -284,11 +284,11 @@ class PlanController extends Controller
 
             // Cachear el nuevo resultado
             $cachedItineraries[$itineraryHash] = $tempPlan;
-            Cache::put($cacheKey, $cachedItineraries, 60 * 60 * 24);
+            Cache::store('redis')->put($cacheKey, $cachedItineraries, 60 * 60 * 24);
 
             // Añadir a la lista de itinerarios vistos por el usuario
             $userViewedItineraries[] = $itineraryHash;
-            Cache::put($userViewedKey, $userViewedItineraries, 60 * 60 * 24);
+            Cache::store('redis')->put($userViewedKey, $userViewedItineraries, 60 * 60 * 24);
 
             return response()->json($tempPlan['data'], Response::HTTP_OK);
 
