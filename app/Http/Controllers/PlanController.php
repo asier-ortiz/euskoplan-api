@@ -5,8 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PlanCreateRequest;
 use App\Http\Requests\PlanSuggestRequest;
 use App\Http\Requests\PlanUpdateRequest;
+use App\Http\Resources\AccommodationResource;
+use App\Http\Resources\CaveResource;
+use App\Http\Resources\CulturalResource;
+use App\Http\Resources\EventResource;
+use App\Http\Resources\FairResource;
+use App\Http\Resources\LocalityResource;
+use App\Http\Resources\MuseumResource;
+use App\Http\Resources\NaturalResource;
 use App\Http\Resources\PlanCompactResource;
 use App\Http\Resources\PlanResource;
+use App\Http\Resources\RestaurantResource;
 use App\Models\Accommodation;
 use App\Models\Cave;
 use App\Models\Cultural;
@@ -264,9 +273,7 @@ class PlanController extends Controller
 
             foreach ($decodedResponse['steps'] as &$step) {
                 $resource = $this->fetchResource($step['resource_id'], $step['planables_type']);
-                if ($resource) {
-                    $step['resource'] = $resource; // Añade la información del recurso al paso
-                }
+                $step['resource'] = $resource; // Añade la información del recurso al paso
             }
 
             $itineraryHash = md5(json_encode($decodedResponse)); // Hash del contenido del itinerario
@@ -446,18 +453,18 @@ class PlanController extends Controller
         ];
     }
 
-    private function fetchResource($resourceId, $planablesType): array|Model|Cultural|Collection|Event|Natural|Accommodation|Locality|Cave|Fair|null
+    private function fetchResource($resourceId, $planablesType): AccommodationResource|CaveResource|CulturalResource|EventResource|FairResource|LocalityResource|MuseumResource|NaturalResource|RestaurantResource
     {
         return match ($planablesType) {
-            'accommodations' => Accommodation::find($resourceId),
-            'caves' => Cave::find($resourceId),
-            'culturals' => Cultural::find($resourceId),
-            'events' => Event::find($resourceId),
-            'fairs' => Fair::find($resourceId),
-            'localities' => Locality::find($resourceId),
-            'museums' => Museum::find($resourceId),
-            'naturals' => Natural::find($resourceId),
-            'restaurants' => Restaurant::find($resourceId),
+            'accommodations' => new AccommodationResource(Accommodation::findOrFail($resourceId)),
+            'caves' => new CaveResource(Cave::findOrFail($resourceId)),
+            'culturals' => new CulturalResource(Cultural::findOrFail($resourceId)),
+            'events' => new EventResource(Event::findOrFail($resourceId)),
+            'fairs' => new FairResource(Fair::findOrFail($resourceId)),
+            'localities' => new LocalityResource(Locality::findOrFail($resourceId)),
+            'museums' => new MuseumResource(Museum::findOrFail($resourceId)),
+            'naturals' => new NaturalResource(Natural::findOrFail($resourceId)),
+            'restaurants' => new RestaurantResource(Restaurant::findOrFail($resourceId)),
             default => null,
         };
     }

@@ -3,14 +3,21 @@
 namespace App\Jobs;
 
 use Database\Helpers\DataManager;
+use Database\Seeders\AccommodationSeeder;
+use Database\Seeders\CaveSeeder;
+use Database\Seeders\CulturalSeeder;
+use Database\Seeders\EventSeeder;
+use Database\Seeders\FairSeeder;
+use Database\Seeders\LocalitySeeder;
+use Database\Seeders\MuseumSeeder;
+use Database\Seeders\NaturalSeeder;
+use Database\Seeders\RestaurantSeeder;
 use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 
 class ProcessCollection implements ShouldQueue
@@ -21,7 +28,7 @@ class ProcessCollection implements ShouldQueue
     protected $language;
 
     public $timeout = 3600; // Timeout de 1 hora
-    public $tries = 3; // Intentos antes de fallar
+    public $tries = 1; // Intentos antes de fallar
 
     /**
      * Create a new job instance.
@@ -39,7 +46,7 @@ class ProcessCollection implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         try {
             Log::info("Starting to process $this->collection in language: $this->language at " . now());
@@ -62,35 +69,35 @@ class ProcessCollection implements ShouldQueue
         }
     }
 
-    protected function runSeeder($collection)
+    protected function runSeeder($collection): void
     {
         switch ($collection) {
             case 'accommodations':
-                Artisan::call('db:seed', ['--class' => 'AccommodationSeeder']);
+                (new AccommodationSeeder())->run();
                 break;
             case 'caves':
-                Artisan::call('db:seed', ['--class' => 'CaveSeeder']);
+                (new CaveSeeder())->run();
                 break;
             case 'culturals':
-                Artisan::call('db:seed', ['--class' => 'CulturalSeeder']);
+                (new CulturalSeeder())->run();
                 break;
             case 'events':
-                Artisan::call('db:seed', ['--class' => 'EventSeeder']);
+                (new EventSeeder())->run();
                 break;
             case 'fairs':
-                Artisan::call('db:seed', ['--class' => 'FairSeeder']);
+                (new FairSeeder())->run();
                 break;
             case 'museums':
-                Artisan::call('db:seed', ['--class' => 'MuseumSeeder']);
+                (new MuseumSeeder())->run();
                 break;
             case 'naturals':
-                Artisan::call('db:seed', ['--class' => 'NaturalSeeder']);
+                (new NaturalSeeder())->run();
                 break;
             case 'restaurants':
-                Artisan::call('db:seed', ['--class' => 'RestaurantSeeder']);
+                (new RestaurantSeeder())->run();
                 break;
             case 'localities':
-                Artisan::call('db:seed', ['--class' => 'LocalitySeeder']);
+                (new LocalitySeeder())->run();
                 break;
             default:
                 Log::warning("No seeder found for collection: $collection");

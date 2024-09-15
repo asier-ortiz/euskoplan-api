@@ -27,6 +27,12 @@ class DataManager
 
     private function getXML($url, $language): SimpleXMLElement|bool|string|null
     {
+//        $maxSize = 500 * 1024 * 1024; // 500MB en bytes
+//
+//        $headers = get_headers($url, 1);
+//        if (isset($headers['Content-Length']) && $headers['Content-Length'] > $maxSize) {
+//            return null;
+//        }
 
         if (file_exists(storage_path() . '/app/downloads/temp')) {
             self::removeDirectory(storage_path() . '/app/downloads/temp');

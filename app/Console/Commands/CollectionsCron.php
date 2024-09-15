@@ -24,7 +24,7 @@ class CollectionsCron extends Command
         ];
 
         // Idiomas a procesar
-        $languages = ['es', 'en'];
+        $languages = ['es'];
 
         $totalJobs = count($resources) * count($languages);
         Log::info("Total jobs to dispatch: $totalJobs");
