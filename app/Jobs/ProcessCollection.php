@@ -27,7 +27,6 @@ class ProcessCollection implements ShouldQueue
     protected $collection;
     protected $language;
 
-//    public $queue = 'collections';
     public $timeout = 3600; // Timeout de 1 hora
     public $tries = 1; // Intentos antes de fallar
 
@@ -40,6 +39,7 @@ class ProcessCollection implements ShouldQueue
     {
         $this->collection = $collection;
         $this->language = $language;
+        $this->onQueue('collections');
     }
 
     /**

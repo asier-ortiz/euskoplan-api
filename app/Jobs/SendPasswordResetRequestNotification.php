@@ -27,6 +27,7 @@ class SendPasswordResetRequestNotification implements ShouldQueue
     {
         $this->user = $user;
         $this->token = $token;
+        $this->onQueue('emails');
     }
 
     /**

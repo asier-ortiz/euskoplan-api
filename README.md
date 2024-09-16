@@ -136,13 +136,25 @@ docker compose exec php php artisan db:seed
 
 ## 6. Queue Workers
 
-- **Queues** are used in the application to handle background jobs like sending emails and processing collections. To ensure that emails and other background jobs (including collection updates) are processed, you must run the following command to start the queue worker:
+- **Queues** are used in the application to handle background jobs like sending emails and processing collections. To ensure that emails and other background jobs are processed, you need to run queue workers for each type of job.
+
+### 6.1 Running Queue Workers for Email Jobs
+
+To start processing email-related jobs, run the following command:
 
 ```bash
-docker compose exec php php artisan queue:work
+docker compose exec php php artisan queue:work --queue=emails
 ```
 
-> :warning: This worker should be running at all times to process queued jobs like sending emails and updating collections.
+### 6.2 Running Queue Workers for Collection Processing Jobs
+
+To start processing jobs related to updating collections, run the following command:
+
+```bash
+docker compose exec php php artisan queue:work --queue=collections
+```
+
+> :warning: These workers should be running at all times to process queued jobs for sending emails and updating collections.
 
 ## 7. Access the Services
 

@@ -29,6 +29,7 @@ class SendEmailVerificationNotification implements ShouldQueue
     {
         $this->user = $user;
         $this->token = $token;
+        $this->onQueue('emails');
     }
 
     /**

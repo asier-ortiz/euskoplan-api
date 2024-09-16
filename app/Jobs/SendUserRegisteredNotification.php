@@ -25,6 +25,7 @@ class SendUserRegisteredNotification implements ShouldQueue
     public function __construct(User $user)
     {
         $this->user = $user;
+        $this->onQueue('emails');
     }
 
     /**
