@@ -5,6 +5,7 @@ namespace Database\Helpers;
 use DOMDocument;
 use DOMXPath;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 use ZipArchive;
 
@@ -27,12 +28,19 @@ class DataManager
 
     private function getXML($url, $language): SimpleXMLElement|bool|string|null
     {
-//        $maxSize = 500 * 1024 * 1024; // 500MB en bytes
-//
-//        $headers = get_headers($url, 1);
-//        if (isset($headers['Content-Length']) && $headers['Content-Length'] > $maxSize) {
-//            return null;
-//        }
+
+        if (empty($url) || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            Log::warning("Invalid or empty URL provided to getXML. Skipping this resource.");
+            return null;
+        }
+
+        $maxSize = 500 * 1024 * 1024; // 500MB
+
+        $headers = get_headers($url, 1);
+        if (isset($headers['Content-Length']) && $headers['Content-Length'] > $maxSize) {
+            Log::error("The file at $url exceeds the maximum allowed size of 500MB.");
+            return null;
+        }
 
         if (file_exists(storage_path() . '/app/downloads/temp')) {
             self::removeDirectory(storage_path() . '/app/downloads/temp');
@@ -45,13 +53,28 @@ class DataManager
 
         try {
             $zipDestinationPath = storage_path("app/downloads/temp/") . uniqid(time(), true) . ".zip";
-            if (!@file_put_contents($zipDestinationPath, fopen($url, 'r'))) return null;
+            if (!@file_put_contents($zipDestinationPath, fopen($url, 'r'))) {
+                Log::warning("Failed to download file from $url.");
+                return null;
+            }
+
+            if (filesize($zipDestinationPath) > $maxSize) {
+                unlink($zipDestinationPath);
+                Log::error("The downloaded file at $url exceeds the maximum allowed size of 500MB.");
+                return null;
+            }
+
             $zip = new ZipArchive();
-            $zip->open($zipDestinationPath, ZIPARCHIVE::RDONLY);
-            $unzipDestinationPath = storage_path("app/downloads/unzip/");
-            if (!file_exists($unzipDestinationPath)) mkdir($unzipDestinationPath, 0775, true);
-            $zip->extractTo($unzipDestinationPath);
-            $zip->close();
+            if ($zip->open($zipDestinationPath, ZipArchive::RDONLY) === true) {
+                $unzipDestinationPath = storage_path("app/downloads/unzip/");
+                if (!file_exists($unzipDestinationPath)) mkdir($unzipDestinationPath, 0775, true);
+                $zip->extractTo($unzipDestinationPath);
+                $zip->close();
+            } else {
+                Log::warning("Failed to open ZIP file at $zipDestinationPath.");
+                return null;
+            }
+
             if (!isset(scandir($unzipDestinationPath)[2])) return null;
             $uncompressedFolderName = array_diff(scandir($unzipDestinationPath), array('..', '.'))[2];
             $folderCode = ltrim(explode('_', $uncompressedFolderName)[0], '0');
@@ -96,7 +119,7 @@ class DataManager
                 }
             }
         } catch (Exception $e) {
-            print $e . PHP_EOL;
+            Log::error($e->getMessage());
         } finally {
             self::removeDirectory(storage_path("app/downloads"));
             if ($data) $data = simplexml_load_string($data, null, LIBXML_NOCDATA);
@@ -121,18 +144,27 @@ class DataManager
     {
         try {
             if (!array_key_exists($resourceType, self::RESOURCES)) {
-                throw new Exception('Requested resource type is invalid.');
+                Log::warning("The resource type '$resourceType' is invalid.");
+                return;
             }
             if (!in_array($language, self::LANGUAGES)) {
-                throw new Exception('Requested resource language is invalid.');
+                Log::warning("The resource language '$language' is invalid.");
+                return;
             }
 
             $url = self::RESOURCES[$resourceType];
-            $json = file_get_contents($url);
+            $json = @file_get_contents($url);
+
+            if ($json === false) {
+                Log::warning("Failed to fetch resource from '$url'.");
+                return;
+            }
+
             $decodedJson = json_decode($json);
 
             if (!$decodedJson) {
-                throw new Exception('Could not decode requested resource.');
+                Log::warning("Could not decode the requested resource from '$url'.");
+                return;
             }
 
             if (!file_exists(database_path() . '/data')) {
@@ -142,25 +174,35 @@ class DataManager
             $data = [];
             foreach ($decodedJson as $jsonObject) {
                 $zipFileUrl = $jsonObject->zipFile ?? null;
-                if ($zipFileUrl !== null) {
+                if ($zipFileUrl !== null && !empty($zipFileUrl)) {
+//                    Log::info("zipFileUrl for resource: $resourceType in language: $language - $zipFileUrl");
+
+                    // Validate the URL format
+                    if (filter_var($zipFileUrl, FILTER_VALIDATE_URL) === false) {
+                        Log::warning("Invalid URL format: $zipFileUrl. Skipping to next item.");
+                        continue;
+                    }
+
                     $dataResource = $this->getXML($zipFileUrl, $language);
                     if ($dataResource !== null) {
                         $data[] = $dataResource;
+                    } else {
+                        Log::warning("Failed to get XML data for zip file URL: $zipFileUrl.");
                     }
+                } else {
+                    Log::warning("Invalid or empty zip file URL found for a resource item. Skipping to next item.");
                 }
             }
 
             if (!empty($data)) {
                 $json_data = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 file_put_contents(database_path() . '/data/' . $language . '-' . $resourceType . '.json', $json_data);
+            } else {
+                Log::warning("No data was fetched for resource type '$resourceType' in language '$language'.");
             }
         } catch (Exception $e) {
-            echo match ($e->getMessage()) {
-                'Requested resource type is invalid.' => "Error: The resource type '$resourceType' is invalid." . PHP_EOL,
-                'Requested resource language is invalid.' => "Error: The resource language '$language' is invalid." . PHP_EOL,
-                'Could not decode requested resource.' => "Error: Unable to decode the resource at '$url'." . PHP_EOL,
-                default => "Error: An unexpected error occurred - " . $e->getMessage() . PHP_EOL,
-            };
+            Log::error("Error while fetching resource for '$resourceType' in language '$language': " . $e->getMessage());
         }
     }
+
 }
